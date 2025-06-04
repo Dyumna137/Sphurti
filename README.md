@@ -190,8 +190,8 @@ Reload Neovim or run `:Lazy sync`.
 
 ```bash
 # Clone the repository
-git clone https://github.com/Dyumna137/nvimbox.git
-cd nvimbox
+git clone https://github.com/Dyumna137/Sphurti.git
+cd Sphurti 
 
 # (Optional) Install dependencies
 pip install -r requirements.txt
