@@ -1,146 +1,207 @@
-KIND_ICONS = {
-    Text = '󰉿',
-    Method = '󰊕',
-    Function = '󰊕',
-    Constructor = '󰒓',
+-- ╭───────────────────────────────╮
+-- │🤖⚙️AUTOCOMPLETION (nvim-cmp)  │
+-- ╰───────────────────────────────╯
+-- NOTE:🧵 3. What is cmp (completion plugin)?
+-- 💡 Think of it as autocomplete magic inside Neovim.
+-- It gives:
+-- ✨ Suggestions as you type,  cmp shows the suggestions, but it doesn't generate them by itself.
+-- 🧠 Autocomplete from:
+-- LSP (cmp-nvim-lsp)
+-- Buffer (cmp-buffer)
+-- File paths (cmp-path)
+-- Snippets (cmp_luasnip)
+--
+-- INFO:It doesn't know code by itself — it pulls suggestions from sources like LSPs.
+-- Who gives smart suggestions like functions, types, variables, etc?
+-- [LSP server] → (cmp-nvim-lsp) → [cmp] → shows popup
 
-    Field = '󰜢',
-    Variable = '󰆦',
-    Property = '󰖷',
+-- This file sets up advanced autocompletion using nvim-cmp with icons and snippets.
+-- It's integrated with luasnip, lspkind, blink.cmp, and various useful sources.
+-- Double quotes are used throughout for consistency.
 
-    Class = '󱡠',
-    Interface = '󱡠',
-    Struct = '󱡠',
-    Module = '󰅩',
+local KIND_ICONS = {
+  Text = "󰉿",
+  Method = "󰊕",
+  Function = "󰊕",
+  Constructor = "󰒓",
 
-    Unit = '󰪚',
-    Value = '󰦨',
-    Enum = '󰦨',
-    EnumMember = '󰦨',
+  Field = "󰜢",
+  Variable = "󰆦",
+  Property = "󰖷",
 
-    Keyword = '󰻾',
-    Constant = '󰏿',
+  Class = "󱡠",
+  Interface = "󱡠",
+  Struct = "󱡠",
+  Module = "󰅩",
 
-    Snippet = '󱄽',
-    Color = '󰏘',
-    File = '󰈔',
-    Reference = '󰬲',
-    Folder = '󰉋',
-    Event = '󱐋',
-    Operator = '󰪚',
-    TypeParameter = '󰬛',
-  }
-return { -- Autocompletion
-    'saghen/blink.cmp',
-   event = 'VeryLazy', -- or 'InsertEnter' 
-    version = '1.*',
-    dependencies = {
-      -- Snippet Engine
-      {
-        'L3MON4D3/LuaSnip',
-        version = '2.*',
-        build = (function()
-          -- Build Step is needed for regex support in snippets.
-          -- This step is not supported in many windows environments.
-          -- Remove the below condition to re-enable on windows.
-          if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
-            return
-          end
-          return 'make install_jsregexp'
-        end)(),
-        dependencies = {
-          -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          {
-            'rafamadriz/friendly-snippets',
-            config = function()
-              require('luasnip.loaders.from_vscode').lazy_load()
-            end,
-          },
-        },
-        opts = {},
-      },
-      'folke/lazydev.nvim',
-    },
-    --- @module 'blink.cmp'
-    --- @type blink.cmp.Config
-    opts = {
-      keymap = {
-        -- 'default' (recommended) for mappings similar to built-in completions
-        --   <c-y> to accept ([y]es) the completion.
-        --    This will auto-import if your LSP supports it.
-        --    This will expand snippets if the LSP sent a snippet.
-        -- 'super-tab' for tab to accept
-        -- 'enter' for enter to accept
-        -- 'none' for no mappings
-        --
-        -- For an understanding of why the 'default' preset is recommended,
-        -- you will need to read `:help ins-completion`
-        --
-        -- No, but seriously. Please read `:help ins-completion`, it is really good!
-        --
-        -- All presets have the following mappings:
-        -- <tab>/<s-tab>: move to right/left of your snippet expansion
-        -- <c-space>: Open menu or open docs if already open
-        -- <c-n>/<c-p> or <up>/<down>: Select next/previous item
-        -- <c-e>: Hide menu
-        -- <c-k>: Toggle signature help
-        --
-        -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+  Unit = "󰪚",
+  Value = "󰦨",
+  Enum = "󰦨",
+  EnumMember = "󰦨",
 
-        -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
-        --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
-      },
+  Keyword = "󰻾",
+  Constant = "󰏿",
 
-      appearance = {
-        -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-        -- Adjusts spacing to ensure icons are aligned
-        nerd_font_variant = 'mono',
+  Snippet = "󱄽",
+  Color = "󰏘",
+  File = "󰈔",
+  Reference = "󰬲",
+  Folder = "󰉋",
+  Event = "󱐋",
+  Operator = "󰪚",
+  TypeParameter = "󰬛",
+}
 
-      },
-
-      completion = {
-        -- By default, you may press `<c-space>` to show the documentation.
-        -- Optionally, set `auto_show = true` to show the documentation after a delay.
-        documentation = { auto_show = false, auto_show_delay_ms = 500 },
-      },
-
-
-      sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
-        providers = {
-          lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+return {
+  "saghen/blink.cmp",
+  event = { "InsertEnter", "BufReadPost" },
+  -- event = "VeryLazy", -- Change to "InsertEnter" for more eager loading
+  version = "1.*",
+  dependencies = {
+    {
+      "L3MON4D3/LuaSnip",
+      version = "2.*",
+      build = (function()
+        if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
+          return
+        end
+        return "make install_jsregexp"
+      end)(),
+      dependencies = {
+        {
+          "rafamadriz/friendly-snippets",
+          config = function()
+            require("luasnip.loaders.from_vscode").lazy_load()
+          end,
         },
       },
-
-      snippets = { preset = 'luasnip' },
-
-      -- Blink.cmp includes an optional, recommended rust fuzzy matcher,
-      -- which automatically downloads a prebuilt binary when enabled.
-      --
-      -- By default, we use the Lua implementation instead, but you may enable
-      -- the rust implementation via `'prefer_rust_with_warning'`
-      --
-      -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
-
-      -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true },
+      opts = {},
     },
-
-  formatting = {
-    fields = { 'kind', 'abbr', 'menu' },
-    format = function(entry, vim_item)
-      vim_item.kind = string.format('%s', KIND_ICONS[vim_item.kind] or '')
-      vim_item.menu = ({
-        nvim_lsp = '[LSP]',
-        luasnip = '[Snippet]',
-        buffer = '[Buffer]',
-        path = '[Path]',
-      })[entry.source.name]
-      return vim_item
-    end,
+    {
+      "folke/lazydev.nvim",
+      opts = {},
+    },
+    {
+      "hrsh7th/nvim-cmp",
+      dependencies = {
+        "hrsh7th/cmp-nvim-lsp",
+        "L3MON4D3/LuaSnip",
+        "saadparwaiz1/cmp_luasnip",
+        "hrsh7th/cmp-buffer",
+        "hrsh7th/cmp-path",
+      },
+    },
+    { "onsails/lspkind.nvim" },
   },
-  }
+  opts = {
+    keymap = {
+      preset = "default",
+    },
+    appearance = {
+      nerd_font_variant = "mono",
+    },
+    completion = {
+      -- Default settings for auto-completion
+      -- autocomplete = {
+      --   require("cmp").TriggerEvent.TextChanged,
+      --   require("cmp").TriggerEvent.InsertEnter,
+      -- },
+      documentation = {
+        auto_show = false,
+        auto_show_delay_ms = 500,
+      },
+    },
+    sources = {
+      default = { "lsp", "path", "snippets", "lazydev" },
+      providers = {
+        lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
+      },
+    },
+    snippets = { preset = "luasnip" },
+    fuzzy = { implementation = "lua" },
+    signature = { enabled = true },
+  },
+  config = function()
+    require("lspkind").init()
+    local cmp = require("cmp")
+    cmp.setup({
+      window = {
+        -- Optionally uncomment for custom popup blending:
+        -- completion = vim.tbl_deep_extend("force", cmp.config.window.bordered(), { winblend = 10 }),
+        -- documentation = vim.tbl_deep_extend("force", cmp.config.window.bordered(), { winblend = 10 }),
+      },
+      mapping = cmp.mapping.preset.insert({
+        ["<C-d>"] = cmp.mapping.scroll_docs(-4),
+        ["<C-f>"] = cmp.mapping.scroll_docs(4),
+        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<C-y>"] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true }),
+        ["<C-e>"] = cmp.mapping.close(),
+      }),
+      sources = cmp.config.sources({
+        { name = "nvim_lua" },
+        { name = "nvim_lsp" },
+        { name = "path" },
+        { name = "luasnip" },
+        { name = "buffer",  keyword_length = 5 },
+      }),
+      snippet = {
+        expand = function(args)
+          require("luasnip").lsp_expand(args.body)
+        end,
+      },
+      formatting = {
+        fields = { "kind", "abbr", "menu" },
+        format = function(entry, vim_item)
+          vim_item.kind = string.format("%s", KIND_ICONS[vim_item.kind] or "")
+          vim_item.menu = ({
+            buffer = "[Buffer]",
+            nvim_lsp = "[LSP]",
+            nvim_lua = "[api]",
+            path = "[Path]",
+            luasnip = "[Snippet]",
+          })[entry.source.name]
+          return vim_item
+        end,
+      },
+      experimental = {
+        native_menu = false,
+        ghost_text = true,
+      },
+    })
+
+    vim.cmd([[
+      highlight! CmpItemAbbr guifg=#ffffff
+      highlight! CmpItemAbbrMatch guifg=#82AAFF gui=bold
+      highlight! CmpItemKind guifg=#C586C0
+      highlight! CmpItemMenu guifg=#A6ACCD
+    ]])
+  end,
+
+}
+
+--[[
+📝 NOTES FOR FUTURE ME:
+
+1. 📦 Snippets:
+   - LuaSnip is your snippet engine.
+   - You are using 'friendly-snippets' which includes many ready-made snippets. Customize them if needed!
+
+2. 🎛️ Customization:
+   - You can enable the `window.winblend` options for a transparent look.
+   - Consider customizing the `completion.documentation` to `auto_show = true` if you want docs to appear on hover.
+
+3. 💡 Icons:
+   - Icons are aligned based on the `nerd_font_variant`. Adjust if using different fonts.
+
+4. 🚀 Performance:
+   - You can switch `fuzzy.implementation` from 'lua' to 'prefer_rust_with_warning' if you want performance boost (requires rust).
+
+5. ⚠️ Repetition:
+   - KIND_ICONS was defined twice in your original config. Keep it once at the top to avoid redundancy.
+
+6. 🔧 Signature Help:
+   - Enabled by default. You can fine-tune this based on your LSP.
+
+7. 🧼 Clean Code:
+   - Avoid duplicate returns and unnecessary nesting in Lua plugin specs. Try to separate plugin definitions and configurations.
+--]]

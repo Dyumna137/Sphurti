@@ -1,0 +1,30 @@
+-- NOTE: Purpose:
+-- ➡️ This defines when formatting happens (e.g., before saving a file).
+--
+-- NOTE: Think of this as:
+-- ⏰ “Run the formatters automatically before saving a file”
+--
+
+
+-- local M = {}
+--
+-- function M.setup_autosave()
+--   vim.api.nvim_create_augroup("AutoFormat", { clear = true })
+--
+--   vim.api.nvim_create_autocmd("BufWritePre", {
+--     group = "AutoFormat",
+--     callback = function(args)
+--       vim.lsp.buf.format({
+--         async = false,
+--         bufnr = args.buf,
+--         filter = function(client)
+--           -- Ignore ruff_lsp or other formatters you don't want
+--           return client.name ~= "ruff_lsp"
+--         end,
+--       })
+--     end,
+--     desc = "Auto format on save",
+--   })
+-- end
+--
+-- return M

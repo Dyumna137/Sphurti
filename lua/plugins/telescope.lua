@@ -2,13 +2,13 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
   'nvim-telescope/telescope.nvim',
   -- event = 'VimEnter',  -- Load plugin when Neovim starts (VimEnter event)
   cmd = "Telescope",
-  keys = { "<leader>ff", "<leader>fg" },
+  keys = { "<leader>ff" },
   dependencies = {
-    'nvim-lua/plenary.nvim',  -- Required dependency for many Neovim plugins
+    'nvim-lua/plenary.nvim', -- Required dependency for many Neovim plugins
 
-    { -- Optional FZF native extension to speed up fuzzy finding, requires `make`
+    {                        -- Optional FZF native extension to speed up fuzzy finding, requires `make`
       'nvim-telescope/telescope-fzf-native.nvim',
-      build = 'make',  -- Build native C extension when installing/updating
+      build = 'make',        -- Build native C extension when installing/updating
       cond = function()
         -- Only load if 'make' executable is available on the system
         return vim.fn.executable('make') == 1
@@ -39,7 +39,7 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
             ['<C-l>'] = actions.select_default,          -- Confirm selection (open file)
           },
           n = {
-            ['q'] = actions.close,  -- Press 'q' to close Telescope window
+            ['q'] = actions.close, -- Press 'q' to close Telescope window
           },
         },
 
@@ -57,14 +57,14 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
       pickers = {
         -- Customize 'find_files' picker
         find_files = {
-          hidden = true,  -- Show hidden files by default
+          hidden = true,                                              -- Show hidden files by default
           file_ignore_patterns = { 'node_modules', '.git', '.venv' }, -- Ignore these dirs
         },
 
         -- Customize 'buffers' picker to manage open buffers
         buffers = {
-          initial_mode = 'normal',   -- Start in normal mode (not insert)
-          sort_lastused = true,      -- Sort buffers by last used time
+          initial_mode = 'normal', -- Start in normal mode (not insert)
+          sort_lastused = true,    -- Sort buffers by last used time
           mappings = {
             n = {
               ['d'] = actions.delete_buffer,  -- Press 'd' to delete buffer
@@ -156,4 +156,3 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
     end, { desc = '[S]earch [N]eovim files' })
   end,
 }
-
