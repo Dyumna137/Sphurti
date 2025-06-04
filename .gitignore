@@ -1,1 +1,37 @@
-lazy-lock.json
+# lazy-lock.json
+# Ignore swap files
+*.swp
+*.swo
+*.swn
+
+# Ignore backup files
+*~
+
+# Ignore undo files
+*.un~
+
+# Ignore session files
+Session.vim
+
+# Ignore log files
+*.log
+
+# Ignore compiled Lua files (optional)
+*.luac
+
+# Ignore node_modules if you use any Node-based plugins
+node_modules/
+
+# Ignore Python cache files if any Python scripts are included
+__pycache__/
+*.pyc
+
+# Ignore other OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore environment config files (if any)
+.env
+
+# Ignore some folders 
+tests/
