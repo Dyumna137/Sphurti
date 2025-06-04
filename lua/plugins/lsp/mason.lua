@@ -1,11 +1,44 @@
 -- plugins/lsp/mason.lua
+--[[
+### 2. **`mason.lua`** — *Installing and managing language servers*
+
+* This file handles **installing the LSP servers automatically** on your machine.
+* Mason is a tool that downloads and manages those LSP servers, so you don't install them manually.
+* Here you tell Mason:
+
+  * "Install pyright for Python,"
+  * "Install lua_ls for Lua,"
+  * and so on.
+* Mason makes sure the servers exist on your computer.
+
+mason.lua will do both work of mason and servers.lua.
+--]]
 
 require("mason").setup()
 require("mason-lspconfig").setup()
 -- require("mason-tool-installer").setup()
 
 local on_attach = require("plugins.lsp.on_attach").on_attach
-local capabilities = require("blink.cmp").get_lsp_capabilities()
+
+-- NOTE: Blink.cmp's get_lsp_capabilities function includes the built-in LSP capabilities by default.
+-- To merge with your own capabilities, use the first argument, which acts as an override.
+--
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities({}, false))
+
+capabilities = vim.tbl_deep_extend("force", capabilities, {
+  textDocument = {
+    foldingRange = {
+      dynamicRegistration = false,
+      lineFoldingOnly = true
+    }
+  }
+})
+
+
+-- Disable LSP's built-in completion (nvim-cmp will handle it)
+-- capabilities.textDocument.completion = nil
+
 local lspconfig = require("lspconfig")
 
 -- Define all LSP servers with optional settings
@@ -23,8 +56,9 @@ local servers = {
         },
         completion = { callSnippet = "Replace" },
         telemetry = { enable = false },
-        diagnostics = { globals = { 'vim' }, -- Tell the server about global `vim`,
-                        disable = { "missing-fields" }
+        diagnostics = {
+          globals = { 'vim' }, -- Tell the server about global `vim`,
+          disable = { "missing-fields" }
         },
       },
     },
@@ -39,7 +73,7 @@ local servers = {
           yapf = { enabled = false },
           mccabe = { enabled = false },
           pylsp_mypy = { enabled = false },
-          pylsp_black = { enabled = false },
+          pylsp_black = { enabled = true },
           pylsp_isort = { enabled = false },
         },
       },
@@ -49,34 +83,35 @@ local servers = {
     commands = {
       RuffAutofix = {
         function()
-          vim.lsp.buf.buf_request({
+          vim.lsp.buf_request(0, "workspace/executeCommand", {
             command = "ruff.applyAutofix",
             arguments = { { uri = vim.uri_from_bufnr(0) } },
-          })
+          }, function(_, _, _, _) end) -- function(_, result, ctx, config) end
         end,
         description = "Ruff: Fix all auto-fixable problems",
       },
       RuffOrganizeImports = {
         function()
-          vim.lsp.buf.buf_request({
+          vim.lsp.buf_request(0, "workspace/executeCommand", {
             command = "ruff.applyOrganizeImports",
             arguments = { { uri = vim.uri_from_bufnr(0) } },
-          })
+          }, function(_, _, _, _) end)
         end,
         description = "Ruff: Format imports",
       },
     },
   },
+
   -- tsserver = {}, -- TypeScript Server (used for JavaScript and TypeScript).
   clangd = {},
   -- jdtls = {},    --  Java Development Tools Language Server.
   -- dart = {},   -- Dart Language Server. For flutter.
   jsonls = {},
   sqls = {},
-  terraformls = {}, --  
-  yamlls = {},   -- .yaml, .yml files (e.g., GitHub Actions, Kubernetes configs).YAML Language Server. 
-  bashls = {},   -- Bash Language Server.
-  -- dockerls = {}, -- Dockerfile Language Server. 
+  terraformls = {}, --
+  yamlls = {},      -- .yaml, .yml files (e.g., GitHub Actions, Kubernetes configs).YAML Language Server.
+  bashls = {},      -- Bash Language Server.
+  -- dockerls = {}, -- Dockerfile Language Server.
   -- docker_compose_language_service = {}, -- Docker Compose YAML language server.
   marksman = {},
   -- Pyright = {},
@@ -99,9 +134,9 @@ require("mason-tool-installer").setup({
 })
 
 require("mason-lspconfig").setup({
-  ensure_installed = vim.tbl_keys(servers),     -- only LSP server names here!
+  ensure_installed = vim.tbl_keys(servers), -- only LSP server names here!
   automatic_enable = true,
-    handlers = {
+  handlers = {
     function(server_name)
       local server_opts = servers[server_name] or {}
       -- This handles overriding only values explicitly passed
@@ -109,11 +144,10 @@ require("mason-lspconfig").setup({
       -- certain features of an LSP (for example, turning off formatting for ts_ls)
 
       -- Merge your on_attach and capabilities into each server config
-      server_opts.on_attach = on_attach
-      server_opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server_opts.capabilities or {})
-
+      server_opts.on_attach = server_opts.on_attach or on_attach or
+          function() end -- Add fallback for missing on_attach or capabilities
+      server_opts.capabilities = vim.tbl_extend("force", capabilities or {}, server_opts.capabilities or {})
       lspconfig[server_name].setup(server_opts)
     end,
   },
 })
-

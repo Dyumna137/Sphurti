@@ -1,4 +1,6 @@
 -- Standalone plugins with less than 10 lines of config go here
+-- this plugins not support Lua-based configuration cause as example tpope/vim-rhubarb is a pure Vimscript plugin).
+-- That’s why Lazy.nvim throws this error.
 return {
   {
     -- autoclose tags

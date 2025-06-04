@@ -1,7 +1,5 @@
 return {
-  --use nvim in browser
-  { 'kristijanhusak/vim-dadbod-ui' },
-  { 'kristijanhusak/vim-dadbod-completion' },
+
   -- Database
   {
     'tpope/vim-dadbod',

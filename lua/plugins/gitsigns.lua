@@ -1,14 +1,14 @@
 -- Adds git related signs to the gutter, as well as utilities for managing changes
--- NOTE: gitsigns is already included in init.lua but contains only the base
+-- NOTE: 📋 gitsigns is already included in init.lua but contains only the base
 -- config. This will add also the recommended keymaps.
 
 return {
   {
     'lewis6991/gitsigns.nvim',
-    -- event = "BufReadPre",
+    event = { "BufReadPre", "BufEnter", "FocusGained" },
     opts = {
       -- Signs configuration
-      signs = {
+      signs                        = {
         add          = { text = '┃' },
         change       = { text = '┃' },
         delete       = { text = '_' },
@@ -17,7 +17,7 @@ return {
         untracked    = { text = '┆' },
       },
 
-      signs_staged = {
+      signs_staged                 = {
         add          = { text = '┃' },
         change       = { text = '┃' },
         delete       = { text = '_' },
@@ -26,21 +26,21 @@ return {
         untracked    = { text = '┆' },
       },
 
-      signs_staged_enable = true,
-      signcolumn = true,
-      numhl      = false,
-      linehl     = false,
-      word_diff  = false,
+      signs_staged_enable          = true,
+      signcolumn                   = true,
+      numhl                        = false,
+      linehl                       = false,
+      word_diff                    = false,
 
-      watch_gitdir = {
+      watch_gitdir                 = {
         follow_files = true,
       },
 
-      auto_attach = true,
-      attach_to_untracked = false,
+      auto_attach                  = true,
+      attach_to_untracked          = false,
 
-      current_line_blame = false,
-      current_line_blame_opts = {
+      current_line_blame           = false,
+      current_line_blame_opts      = {
         virt_text = true,
         virt_text_pos = 'eol',
         delay = 1000,
@@ -51,12 +51,12 @@ return {
 
       current_line_blame_formatter = '<author>, <author_time:%R> - <summary>',
 
-      sign_priority = 6,
-      update_debounce = 100,
-      status_formatter = nil,
-      max_file_length = 40000,
+      sign_priority                = 6,
+      update_debounce              = 100,
+      status_formatter             = nil,
+      max_file_length              = 40000,
 
-      preview_config = {
+      preview_config               = {
         style = 'minimal',
         relative = 'cursor',
         row = 0,
@@ -64,7 +64,7 @@ return {
       },
 
       -- <<<<<< on_attach must be inside opts! >>>>>>
-      on_attach = function(bufnr)
+      on_attach                    = function(bufnr)
         local gitsigns = require 'gitsigns'
 
         local function map(mode, l, r, opts)
@@ -117,4 +117,3 @@ return {
     },
   },
 }
-

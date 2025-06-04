@@ -13,6 +13,12 @@ vim.opt.shellxquote = ""
 require("core.options")
 require("core.keymaps")
 
+
+--While creating a custom funnction and to made them global
+--
+--
+require("plugins.floaterminal")
+
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.hl.on_yank()`
@@ -23,6 +29,14 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.hl.on_yank()
   end,
 })
+
+-- 🔒 Prevent native LSP completion popup for a specific filetype
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = "markdown",
+--   callback = function()
+--     vim.bo.omnifunc = ""
+--   end
+-- })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -49,53 +63,54 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-{
-    'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-    event = 'BufReadPre', -- will load when opening any file
-},
-{
-  "famiu/bufdelete.nvim",
-  cmd = "Bdelete",
-},
-
-require("plugins.neo-tree"),
-require("plugins.colortheme"),
-require("plugins.bufferline"),
-require("plugins.lualine"),
-require("plugins.treesitter"),
-require("plugins.telescope"),
-require("plugins.lsp"),
--- require("plugins.autopairs"),
--- require("plugins.debug"),
--- require("plugins.lint"),
--- require("plugins.indent_line"), 
-require("plugins.gitsigns"),
-require("plugins.autocompletion"),
-require("plugins.alpha"),
-require("plugins.misc"),
-require("plugins.database"),
-require("plugins.trouble")
-},
-{
-  ui = {
-    -- If you have a Nerd Font, set icons to an empty table which will use the
-    -- default lazy.nvim defined Nerd Font icons otherwise define a unicode icons table
-    icons = vim.g.have_nerd_font and {} or {
-      cmd = '⌘',
-      config = '🛠',
-      event = '📅',
-      ft = '📂',
-      init = '⚙',
-      keys = '🗝',
-      plugin = '🔌',
-      runtime = '💻',
-      require = '🌙',
-      source = '📄',
-      start = '🚀',
-      task = '📌',
-      lazy = '💤 ',
+    -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
+    {
+      'tpope/vim-sleuth',   -- Detect tabstop and shiftwidth automatically
+      event = 'BufReadPre', -- will load when opening any file
     },
-  },
-})
+    {
+      "famiu/bufdelete.nvim",
+      cmd = "Bdelete",
+    },
+    require("plugins.neo-tree"),
+    require("plugins.colortheme"),
+    require("plugins.bufferline"),
+    require("plugins.lualine"),
+    require("plugins.treesitter"),
+    require("plugins.telescope"),
+    require("plugins.lsp"),
+    -- require("plugins.autopairs"),
+    -- require("plugins.debug"),
+    -- require("plugins.lint"),
+    require("plugins.gitsigns"),
+    require("plugins.indent_line"),
+    require("plugins.autocompletion"),
+    require("plugins.alpha"),
+    require("plugins.misc"),
+    require("plugins.database"),
+    require("plugins.trouble"),
+    require("plugins.lsp_signature"),
 
+    checker = { enabled = true },
+  },
+  {
+    ui = {
+      -- If you have a Nerd Font, set icons to an empty table which will use the
+      -- default lazy.nvim defined Nerd Font icons otherwise define a unicode icons table
+      icons = vim.g.have_nerd_font and {} or {
+        cmd = '⌘',
+        config = '🛠',
+        event = '📅',
+        ft = '📂',
+        init = '⚙',
+        keys = '🗝',
+        plugin = '🔌',
+        runtime = '💻',
+        require = '🌙',
+        source = '📄',
+        start = '🚀',
+        task = '📌',
+        lazy = '💤 ',
+      },
+    },
+  })
