@@ -215,5 +215,5 @@ I’ll continue improving it as I learn and experiment. Feel free to explore, fo
 
 ## 📝 License
 
-This configuration is available under the [MIT License](./LICENSE).
+This configuration is available under the [MIT License](https://github.com/Dyumna137/Sphurti/blob/main/LICENSE.md).
 
