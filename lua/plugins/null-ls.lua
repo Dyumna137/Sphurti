@@ -25,7 +25,7 @@
 return {
   "nvimtools/none-ls.nvim",
   enable = false,
-  event = { "BufReadPre", "BufNewFile" },
+  event = "BufReadPre", -- load only when opening a file
   opts = function()
     local null_ls = require("plugins.null-ls")
 

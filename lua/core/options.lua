@@ -1,10 +1,11 @@
 -- File: ~/.config/nvim/lua/core/options.lua
-
+-- options.lua is usually where you keep all editor-wide settings like vim.opt.*.
+-- Putting things like editor like-wide settings instead of init.lua is cleaner.
 -- ╭────────────────────────────╮
 -- │ GENERAL                    │
 -- ╰────────────────────────────╯
 local opt = vim.opt
-local g = vim.g
+-- local g = vim.g
 
 opt.mouse = 'a'               -- Enable mouse support
 opt.clipboard = 'unnamedplus' -- Sync Neovim clipboard with system
@@ -87,7 +88,12 @@ opt.runtimepath:remove('/usr/share/vim/vimfiles') -- Don't load Vim-specific pat
 -- ╭────────────────────────────╮
 -- │ OTHERS                     │
 -- ╰────────────────────────────╯
-
+-- Clear the screen when Neovim exits (Windows only)
+if vim.fn.has("win32") == 1 then
+  vim.api.nvim_create_autocmd("VimLeave", {
+    command = "silent !cls",
+  })
+end
 
 
 -- Optional: return options for use in other modules

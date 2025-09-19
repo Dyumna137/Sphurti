@@ -1,3 +1,6 @@
+-- in your init.lua
+vim.loader.enable() -- this caches Lua modules and speeds up startup
+
 -- ╭───────────────────────────╮
 -- │ MANUAL DEBUGGING          │
 -- ╰───────────────────────────╯
@@ -63,6 +66,10 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+    performance = { -- turn on cache
+      cache = { enabled = true },
+      rtp = { disabled_plugins = { "netrwPlugin" } },
+    },
     -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
     {
       'tpope/vim-sleuth',   -- Detect tabstop and shiftwidth automatically
@@ -72,14 +79,15 @@ require('lazy').setup({
       "famiu/bufdelete.nvim",
       cmd = "Bdelete",
     },
-    require("plugins.neo-tree"),
+    -- require("plugins.neo-tree"),
+    require("plugins.oil"),
     require("plugins.colortheme"),
     require("plugins.bufferline"),
     require("plugins.lualine"),
     require("plugins.treesitter"),
     require("plugins.telescope"),
     require("plugins.lsp"),
-    -- require("plugins.autopairs"),
+    require("plugins.autopairs"),
     -- require("plugins.debug"),
     -- require("plugins.lint"),
     require("plugins.gitsigns"),
@@ -90,7 +98,9 @@ require('lazy').setup({
     require("plugins.database"),
     require("plugins.trouble"),
     require("plugins.lsp_signature"),
-
+    -- require("plugins.noice"),
+    -- require("plugins.glow"),
+    require("plugins.sqlua"),
     checker = { enabled = true },
   },
   {

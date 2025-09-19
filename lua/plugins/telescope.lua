@@ -5,7 +5,7 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
   keys = { "<leader>ff" },
   dependencies = {
     'nvim-lua/plenary.nvim', -- Required dependency for many Neovim plugins
-
+    "folke/trouble.nvim",    -- keep this if you want integration
     {                        -- Optional FZF native extension to speed up fuzzy finding, requires `make`
       'nvim-telescope/telescope-fzf-native.nvim',
       build = 'make',        -- Build native C extension when installing/updating
@@ -27,7 +27,7 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
   config = function()
     -- Import Telescope's actions for key mappings
     local actions = require('telescope.actions')
-
+    local trouble = require("trouble.sources.telescope")
     -- Telescope configuration
     require('telescope').setup {
       defaults = {
@@ -39,7 +39,8 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
             ['<C-l>'] = actions.select_default,          -- Confirm selection (open file)
           },
           n = {
-            ['q'] = actions.close, -- Press 'q' to close Telescope window
+            ['q'] = actions.close,    -- Press 'q' to close Telescope window
+            ["<c-t>"] = trouble.open, -- open in trouble from Telescope
           },
         },
 
@@ -59,6 +60,11 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
         find_files = {
           hidden = true,                                              -- Show hidden files by default
           file_ignore_patterns = { 'node_modules', '.git', '.venv' }, -- Ignore these dirs
+          -- search_dirs = {
+          --   vim.fn.stdpath("config") .. "/lua",                       -- your config files
+          --   vim.fn.stdpath("data") .. "/lazy",                        -- lazy.nvim plugins
+          -- }
+          find_command = { "fd", "--type", "f", "--hidden", "--no-ignore" },
         },
 
         -- Customize 'buffers' picker to manage open buffers

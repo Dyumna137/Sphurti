@@ -122,3 +122,25 @@ end, { desc = "Manually show detailed diagnostic float" })
 -- only when using windows OS
 -- Ctrl+B = Visual Block Mode (remapped from Ctrl+V because terminal hijacks it)
 vim.keymap.set("n", "<C-b>", "<C-v>", { noremap = true })
+
+-- ╭────────────────────────────╮
+-- │ OTHERS                     │
+-- ╰────────────────────────────╯
+-- Modes: 'n' = normal, 'i' = insert, 'v' = visual
+
+-- Disable in normal, insert, and visual modes
+for _, mode in pairs({ 'n', 'v' }) do
+  vim.keymap.set(mode, '<Up>', '<Nop>', { noremap = true, silent = true })
+  vim.keymap.set(mode, '<Down>', '<Nop>', { noremap = true, silent = true })
+  vim.keymap.set(mode, '<Left>', '<Nop>', { noremap = true, silent = true })
+  vim.keymap.set(mode, '<Right>', '<Nop>', { noremap = true, silent = true })
+end
+
+vim.keymap.set("n", "<leader>ff", function()
+  require("telescope.builtin").find_files({
+    hidden = true,                              -- show hidden files
+    no_ignore = true,                           -- don’t skip ignored files
+    search_dirs = { vim.fn.stdpath("config") }, -- search your nvim config
+  })
+end, { desc = "[F]ind [F]iles (including config)" })
+-- it tells Neovim: “When I press <leader>ff, run Telescope and search my config files, including hidden ones.”

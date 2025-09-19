@@ -35,7 +35,20 @@ capabilities = vim.tbl_deep_extend("force", capabilities, {
   }
 })
 
+local function get_root_dir(startpath)
+  local git_dir = vim.fs.find('*.git', { upward = true, path = startpath })[1]
+  return vim.fs.dirname(git_dir) or vim.fs.dirname(startpath)
+end
+--[[
 
+✅ What This Does
+It searches upward from the current file’s directory to find a .git folder.
+If .git is found, it returns the parent directory (i.e., project root).
+If not, it falls back to the file’s own directory.
+
+✅ No deprecation warnings, and works exactly like the old util.find_git_ancestor().
+
+--]]
 -- Disable LSP's built-in completion (nvim-cmp will handle it)
 -- capabilities.textDocument.completion = nil
 
@@ -62,6 +75,9 @@ local servers = {
         },
       },
     },
+    -- 👇 Add this!
+    root_dir = get_root_dir,
+
   },
   pylsp = {
     settings = {
@@ -103,14 +119,14 @@ local servers = {
   },
 
   -- tsserver = {}, -- TypeScript Server (used for JavaScript and TypeScript).
-  clangd = {},
-  -- jdtls = {},    --  Java Development Tools Language Server.
+  clangd = require("plugins.lsp.ft.clang"),
+  -- jdtls = require("plugins.lsp.ft.java"),
+  -- java_language_server = {},
   -- dart = {},   -- Dart Language Server. For flutter.
   jsonls = {},
   sqls = {},
-  terraformls = {}, --
-  yamlls = {},      -- .yaml, .yml files (e.g., GitHub Actions, Kubernetes configs).YAML Language Server.
-  bashls = {},      -- Bash Language Server.
+  yamlls = {}, -- .yaml, .yml files (e.g., GitHub Actions, Kubernetes configs).YAML Language Server.
+  bashls = {}, -- Bash Language Server.
   -- dockerls = {}, -- Dockerfile Language Server.
   -- docker_compose_language_service = {}, -- Docker Compose YAML language server.
   marksman = {},
@@ -124,6 +140,13 @@ local extra_tools = {
   "markdownlint",
   -- Add others like prettier, eslint_d...
 }
+-- autocommands
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "java" },
+  callback = function()
+    require("plugins.lsp.ft.java").setup()
+  end,
+})
 
 -- Combine server names and extra tools for mason-tool-installer
 local ensure_installed = vim.tbl_keys(servers)

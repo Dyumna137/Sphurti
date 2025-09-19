@@ -109,6 +109,15 @@ return {
             folder_open = "",
             folder_empty = "󰜌",
             folder_empty_open = "",
+            ---@class NeoTreeNode
+            ---@field type string
+            ---@field name string
+
+            ---@class NeoTreeState
+            ---@field source string
+
+            ---@param node NeoTreeNode
+            ---@param state NeoTreeNode
             provider = function(icon, node, state)
               if node.type == "file" or node.type == "terminal" then
                 local success, web_devicons = pcall(require, "nvim-web-devicons")
@@ -266,9 +275,9 @@ return {
         filesystem = {
           filtered_items = {
             visible = false, -- when true, they will just be displayed differently than normal items
-            hide_dotfiles = true,
-            hide_gitignored = true,
-            hide_hidden = true, -- only works on Windows for hidden files/directories
+            hide_dotfiles = false,
+            hide_gitignored = false,
+            hide_hidden = false, -- only works on Windows for hidden files/directories
             hide_by_name = {
               --"node_modules"
             },

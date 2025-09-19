@@ -1,0 +1,14 @@
+Telescope By default respectecs `.gitignore`.
+
+
+:lua print(vim.inspect(require("telescope.config").values.find_command))
+
+If it prints nil, then Telescope is using its default searcher (it tries fd, then rg, then find, in that order, depending on what’s installed).
+If it prints something like:
+{ "fd", "--type", "f", "--color", "never" }
+
+→ you’re using fd.
+
+If it prints:
+{ "rg", "--files", "--color", "never", "--hidden" }
+→ you’re using ripgrep (rg).

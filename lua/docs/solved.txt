@@ -1,0 +1,6 @@
+Problem with slow starts up maybe some plugins try to activate while starting up neovim not while thaet required mainly in lsp.lua file configuration mostly all are activating when neovim just opened.
+solution ` event = "BufReadPre", ` -- activate when required .
+also put this at the top of native init.lua configuration file 
+` vim.loader.enable() `-- this caches Lua modules and speeds up startup.
+
+
