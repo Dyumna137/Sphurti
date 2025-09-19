@@ -6,47 +6,53 @@
 
 return {
   { -- Main LSP Configuration
-    'neovim/nvim-lspconfig',
-    event = { "InsertEnter", "BufReadPost" },
+    "neovim/nvim-lspconfig",
+    event = "BufReadPre",
     dependencies = {
-      -- Mason and related plugins for automatic LSP and tool installation
-      { 'saghen/blink.cmp' },
+      { "saghen/blink.cmp" },
+
+      -- Mason: only load when you need to install servers
+      { "williamboman/mason.nvim",                  cmd = { "Mason", "MasonInstall" }, opts = {} },
+      { "williamboman/mason-lspconfig.nvim" },
+      { "WhoIsSethDaniel/mason-tool-installer.nvim" },
+
+      -- Status updates for LSP
+      { "j-hui/fidget.nvim",                        event = "LspAttach",               opts = {} },
+
+      -- Autocompletion
+      {
+        "hrsh7th/nvim-cmp",
+        event = "InsertEnter",
+        dependencies = {
+          "hrsh7th/cmp-nvim-lsp",
+          "L3MON4D3/LuaSnip",
+          "saadparwaiz1/cmp_luasnip",
+          "hrsh7th/cmp-buffer",
+          "hrsh7th/cmp-path",
+          "onsails/lspkind.nvim",
+        },
+      },
+
+      -- Java LSP
+      { "mfussenegger/nvim-jdtls", ft = "java" },
+
+      -- Lazy load only for Lua files
       {
         "folke/lazydev.nvim",
-        ft = "lua", -- only load on lua files
+        ft = "lua",
         opts = {
           library = {
-            -- Load luvit types when the `vim.uv` word is found
             { path = "${3rd}/luv/library", words = { "vim%.uv" } },
           },
         },
       },
-      { 'mason-org/mason.nvim', event = "BufReadPre", opts = {} },
-      'mason-org/mason-lspconfig.nvim',
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
-
-      -- Status updates for LSP
-      { 'j-hui/fidget.nvim',   opts = {} },
-      { "hrsh7th/cmp-nvim-lsp" }, -- recommended if using nvim-cmp
-      -- nvim-cmp (Autocompletion)
-      {
-        "hrsh7th/nvim-cmp",
-        event = "InsertEnter", -- event = { "BufReadPre", "BufNewFile", "InsertEnter" },
-        dependencies = {
-          "hrsh7th/cmp-nvim-lsp",
-          "L3MON4D3/LuaSnip",         -- snippets engine
-          "saadparwaiz1/cmp_luasnip", -- for LuaSnip completion
-          "hrsh7th/cmp-buffer",
-          "hrsh7th/cmp-path",
-        },
-        { "onsails/lspkind.nvim" },
-      },
     },
+
 
     config = function()
       -- Diagnostic config (single call, merging signs floating and other settings)
       vim.diagnostic.config({
-        virtual_text = true,  -- disable inline virtual text
+        virtual_text = false, -- disable inline virtual text
         float = {
           border = "rounded", -- 🔵 Rounded border
           source = true,      -- show source like [clangd]
@@ -60,7 +66,7 @@ return {
         },
         update_in_insert = true, -- real-time diagnostics
         severity_sort = true,
-        signs = {
+        signs = {                -- enable signs in gutter
           active = true,
           severity = {
             min = vim.diagnostic.severity.HINT,
@@ -75,7 +81,7 @@ return {
         },
       })
       -- For python formatting
-      vim.api.nvim_create_user_command("RuffAutofix", function()
+      vim.api.nvim_create_user_command("RuffAutofix", function() -- Run :RuffAutofix → all auto-fixable issues are fixed.
         local bufnr = vim.api.nvim_get_current_buf()
         local params = {
           command = "ruff.applyAutofix",
@@ -89,49 +95,22 @@ return {
         vim.lsp.buf_request(bufnr, "workspace/executeCommand", params, function(_, _, _, _) end)
       end, { desc = "Ruff: Fix all auto-fixable problems" })
 
-      vim.api.nvim_create_user_command("RuffOrganizeImports", function()
-        local bufnr = vim.api.nvim_get_current_buf()
-        local params = {
-          command = "ruff.applyOrganizeImports",
-          arguments = {
-            {
-              uri = vim.uri_from_bufnr(bufnr),
-              version = vim.lsp.util.buf_versions[bufnr] or 0,
+      vim.api.nvim_create_user_command("RuffOrganizeImports",
+        function() -- Run :RuffOrganizeImports → imports are automatically sorted/cleaned.
+          local bufnr = vim.api.nvim_get_current_buf()
+          local params = {
+            command = "ruff.applyOrganizeImports",
+            arguments = {
+              {
+                uri = vim.uri_from_bufnr(bufnr),
+                version = vim.lsp.util.buf_versions[bufnr] or 0,
+              }
             }
           }
-        }
-        vim.lsp.buf_request(bufnr, "workspace/executeCommand", params, function(_, _, _, _) end)
-      end, { desc = "Ruff: Organize imports" })
+          vim.lsp.buf_request(bufnr, "workspace/executeCommand", params, function(_, _, _, _) end)
+        end, { desc = "Ruff: Organize imports" })
 
 
-
-      -- -- Set up autocommand group to safely manage floating diagnostics popup
-      -- vim.api.nvim_create_augroup("FloatDiagnostics", { clear = true })
-      --
-      -- vim.api.nvim_create_autocmd("CursorHold", {
-      --
-      --   group = "FloatDiagnostics",
-      --   callback = function()
-      --     -- Avoid showing diagnostics float inside Trouble window
-      --     if vim.bo.filetype == "Trouble" then
-      --       return
-      --     end
-      --
-      --     if vim.fn.mode() == "n" then
-      --       vim.diagnostic.open_float(nil, {
-      --         focusable = false,
-      --         close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
-      --         border = "rounded",
-      --         source = "always",
-      --         prefix = "",
-      --         scope = "cursor",
-      --         win_opts = {
-      --           winblend = 50, -- 0 = opaque, 100 = fully transparent
-      --         },
-      --       })
-      --     end
-      --   end,
-      -- })
 
 
       require("plugins.lsp.mason") -- Setup Mason and install servers
@@ -280,11 +259,13 @@ return {
           -- │🤖⚙️AUTOCOMPLETION (nvim-cmp)  │
           -- ╰───────────────────────────────╯
           -- a better completion is there in autocompletion.lua under lua\plugins folder,
+
+
           -- ╭───────────────────────────╮
           -- │🖍️Document Highlight       │
           -- ╰───────────────────────────╯
           -- Document Highlight if supported
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
+          -- local client = vim.lsp.get_client_by_id(event.data.client_id) -- already defined ` local client ` at 209 line
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
             local hl_group = vim.api.nvim_create_augroup("lsp-highlight", { clear = false }) -- vim.api lets you interact with Neovim — like manipulating buffers, windows, or getting/setting options — through Lua scripts.
 

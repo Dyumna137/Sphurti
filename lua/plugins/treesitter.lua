@@ -1,11 +1,12 @@
 return { -- Highlight, edit, and navigate code
   'nvim-treesitter/nvim-treesitter',
-  event = "BufReadPost",
+  event = { "BufReadPost", "BufNewFile" },
   build = ':TSUpdate',
   dependencies = {
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
   config = function()
+    ---@diagnostic disable-next-line: missing-fields
     require('nvim-treesitter.configs').setup { -- luacheck: ignore 123
       -- Add languages to be installed here that you want installed for treesitter
       ensure_installed = {
@@ -42,7 +43,7 @@ return { -- Highlight, edit, and navigate code
       auto_install = true,
       sync_install = false,
       ignore_install = { "phpdoc", "haskell" },
-
+      modules = {}, -- required by TSConfig type
       highlight = {
         enable = true,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
