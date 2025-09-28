@@ -11,50 +11,48 @@
   * and so on.
 * Mason makes sure the servers exist on your computer.
 
-mason.lua will do both work of mason and servers.lua.
+📌 In this config:
+- Mason + mason-lspconfig manage LSP server installation.
+- mason-tool-installer installs formatters/linters alongside servers.
+- Each LSP is set up with `on_attach` and enhanced `capabilities`.
+- An `LspAttach` autocmd ensures `on_attach` also runs for LSPs that
+  are not managed by mason-lspconfig (like jdtls, typescript-tools, etc.).
 --]]
 
+-- Mason base setup (UI, registry, paths)
 require("mason").setup()
 require("mason-lspconfig").setup()
--- require("mason-tool-installer").setup()
 
 local on_attach = require("plugins.lsp.on_attach").on_attach
 
 -- NOTE: Blink.cmp's get_lsp_capabilities function includes the built-in LSP capabilities by default.
 -- To merge with your own capabilities, use the first argument, which acts as an override.
---
 local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = vim.tbl_deep_extend('force', capabilities, require('blink.cmp').get_lsp_capabilities({}, false))
+capabilities = vim.tbl_deep_extend("force", capabilities, require("blink.cmp").get_lsp_capabilities({}, false))
 
+-- Add folding support to all servers
 capabilities = vim.tbl_deep_extend("force", capabilities, {
   textDocument = {
     foldingRange = {
       dynamicRegistration = false,
-      lineFoldingOnly = true
-    }
-  }
+      lineFoldingOnly = true,
+    },
+  },
 })
 
+-- 🔍 Helper: find project root by walking upward until a `.git` folder is found
 local function get_root_dir(startpath)
-  local git_dir = vim.fs.find('*.git', { upward = true, path = startpath })[1]
+  local git_dir = vim.fs.find("*.git", { upward = true, path = startpath })[1]
   return vim.fs.dirname(git_dir) or vim.fs.dirname(startpath)
 end
 --[[
-
-✅ What This Does
-It searches upward from the current file’s directory to find a .git folder.
-If .git is found, it returns the parent directory (i.e., project root).
-If not, it falls back to the file’s own directory.
-
-✅ No deprecation warnings, and works exactly like the old util.find_git_ancestor().
-
+✅ This works like `util.find_git_ancestor()` (now deprecated).
+It finds the `.git` folder; if not found, falls back to the file’s dir.
 --]]
--- Disable LSP's built-in completion (nvim-cmp will handle it)
--- capabilities.textDocument.completion = nil
 
 local lspconfig = require("lspconfig")
 
--- Define all LSP servers with optional settings
+-- 🛠️ Define all LSP servers with optional custom settings
 local servers = {
   lua_ls = {
     settings = {
@@ -70,31 +68,15 @@ local servers = {
         completion = { callSnippet = "Replace" },
         telemetry = { enable = false },
         diagnostics = {
-          globals = { 'vim' }, -- Tell the server about global `vim`,
-          disable = { "missing-fields" }
+          globals = { "vim" }, -- Tell the server about global `vim`
+          disable = { "missing-fields" },
         },
       },
     },
-    -- 👇 Add this!
     root_dir = get_root_dir,
+  },
 
-  },
-  pylsp = {
-    settings = {
-      pylsp = {
-        plugins = {
-          pyflakes = { enabled = false },
-          pycodestyle = { enabled = false },
-          autopep8 = { enabled = false },
-          yapf = { enabled = false },
-          mccabe = { enabled = false },
-          pylsp_mypy = { enabled = false },
-          pylsp_black = { enabled = true },
-          pylsp_isort = { enabled = false },
-        },
-      },
-    },
-  },
+  -- Ruff: Python linter/formatter
   ruff = {
     commands = {
       RuffAutofix = {
@@ -102,7 +84,7 @@ local servers = {
           vim.lsp.buf_request(0, "workspace/executeCommand", {
             command = "ruff.applyAutofix",
             arguments = { { uri = vim.uri_from_bufnr(0) } },
-          }, function(_, _, _, _) end) -- function(_, result, ctx, config) end
+          }, function(_, _, _, _) end)
         end,
         description = "Ruff: Fix all auto-fixable problems",
       },
@@ -118,29 +100,24 @@ local servers = {
     },
   },
 
-  -- tsserver = {}, -- TypeScript Server (used for JavaScript and TypeScript).
-  clangd = require("plugins.lsp.ft.clang"),
-  -- jdtls = require("plugins.lsp.ft.java"),
-  -- java_language_server = {},
-  -- dart = {},   -- Dart Language Server. For flutter.
+  pyright = {},                             -- Python type checker
+  clangd = require("plugins.lsp.ft.clang"), -- C/C++ server with custom config
   jsonls = {},
   sqls = {},
-  yamlls = {}, -- .yaml, .yml files (e.g., GitHub Actions, Kubernetes configs).YAML Language Server.
-  bashls = {}, -- Bash Language Server.
-  -- dockerls = {}, -- Dockerfile Language Server.
-  -- docker_compose_language_service = {}, -- Docker Compose YAML language server.
-  marksman = {},
-  -- Pyright = {},
+  yamlls = {},   -- YAML LSP (GitHub Actions, Kubernetes configs, etc.)
+  bashls = {},   -- Bash LSP
+  marksman = {}, -- Markdown LSP
 }
 
--- Non-LSP tools (formatters, linters)
+-- 🧹 Non-LSP tools (formatters, linters) to install via mason-tool-installer
 local extra_tools = {
-  "stylua",
-  "clang-format",
-  "markdownlint",
-  -- Add others like prettier, eslint_d...
+  "stylua",       -- Lua formatter
+  "clang-format", -- C/C++ formatter
+  "markdownlint", -- Markdown linter
+  -- Add others like prettier, eslint_d, black, etc.
 }
--- autocommands
+
+-- 📌 Autocommands for filetype-specific setups (e.g. Java)
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "java" },
   callback = function()
@@ -148,29 +125,40 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Combine server names and extra tools for mason-tool-installer
+-- 🧩 Combine LSP servers and tools into one install list
 local ensure_installed = vim.tbl_keys(servers)
 vim.list_extend(ensure_installed, extra_tools)
 
+-- 🔄 Ensure everything is installed
 require("mason-tool-installer").setup({
-  ensure_installed = ensure_installed, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+  ensure_installed = ensure_installed,
 })
 
+-- 🚀 Setup each LSP server with merged config
 require("mason-lspconfig").setup({
-  ensure_installed = vim.tbl_keys(servers), -- only LSP server names here!
+  ensure_installed = vim.tbl_keys(servers),
   automatic_enable = true,
   handlers = {
     function(server_name)
       local server_opts = servers[server_name] or {}
-      -- This handles overriding only values explicitly passed
-      -- by the server configuration above. Useful when disabling
-      -- certain features of an LSP (for example, turning off formatting for ts_ls)
 
-      -- Merge your on_attach and capabilities into each server config
-      server_opts.on_attach = server_opts.on_attach or on_attach or
-          function() end -- Add fallback for missing on_attach or capabilities
+      -- Merge on_attach and capabilities into each server config
+      server_opts.on_attach = server_opts.on_attach or on_attach or function() end
       server_opts.capabilities = vim.tbl_extend("force", capabilities or {}, server_opts.capabilities or {})
+
       lspconfig[server_name].setup(server_opts)
     end,
   },
+})
+
+-- 🛡️ Safety net: run on_attach for *any* LSP that attaches,
+-- even those not managed by mason-lspconfig (like jdtls, dartls, etc.)
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    local bufnr = args.buf
+    if client and bufnr then
+      on_attach(client, bufnr)
+    end
+  end,
 })
