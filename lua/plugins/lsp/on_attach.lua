@@ -1,15 +1,26 @@
 --[[
-### 1. **`on_attach.lua`** — what to do when the LSP starts working on a file
+### 1. **`on_attach.lua`** — Buffer-local behavior for LSP clients
 
-* This file contains **the stuff that runs when the language server connects to a file**.
-* Usually, here you put **keybindings** for things like "go to definition", "hover help", "rename symbol".
-* Think of it as "what shortcuts do I want only when LSP is active in this buffer?"
+**Purpose:**  
+Defines behavior that only applies to a specific buffer **when a language server attaches**.  
+This ensures that keymaps, autoformatting, and document highlights are only active for buffers with an LSP client.
 
-**Example**:
-* Pressing `K` shows documentation.
-* Pressing `<leader>rn` renames a symbol.
+**Responsibilities:**
+1. Define buffer-local keymaps for LSP actions:
+   - `K` → hover documentation
+   - `<leader>rn` → rename symbol
+   - `<leader>ca` → code actions
+   - Navigation mappings (`gd`, `grd`, `gri`, `grt`, etc.)
+2. Set up **document highlights** if supported by the client.
+3. Configure **autoformat on save** for clients that support formatting.
+4. Disable certain capabilities selectively (e.g., formatting for `tsserver` or `lua_ls`).
+5. Provide helpers for safe, readable buffer-local keymaps and capability checks.
 
-🔍 What should go inside on_attach:
+**Example Usage:**
+```lua
+-- Inside on_attach function
+- bufmap(bufnr, "K", vim.lsp.buf.hover, "Hover Documentation")
+- bufmap(bufnr, "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
 - All LSP-specific mappings should go inside `on_attach`.
 - Any behavior depending on the capabilities of the attached client (like `hoverProvider`) belongs here.
 - Any logic that customizes how an LSP behaves in a specific buffer (e.g., disabling formatting for tsserver) belongs here.
