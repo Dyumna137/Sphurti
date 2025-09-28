@@ -6,19 +6,16 @@
 * Think of it as "What shortcuts do I want only when LSP is active in this buffer?"
 
 **Example**:
-
 * Pressing `K` shows documentation.
 * Pressing `<leader>rn` renames a symbol.
 
 🔍 What Should Go Inside on_attach
-Your inline comment is spot-on. To clarify:
-
-All LSP-specific mappings should go inside on_attach.
-Any behavior depending on the capabilities of the attached client (like client.server_capabilities.hoverProvider) belongs here.
-Any logic that customizes how an LSP behaves in a specific buffer (e.g., disabling formatting for tsserver) also belongs here.
-UI tweaks like disabling handlers (textDocument/hover, etc.) can also be inside on_attach if they're per-client or per-buffer.
-
+- All LSP-specific mappings should go inside on_attach.
+- Any behavior depending on the capabilities of the attached client (like client.server_capabilities.hoverProvider) belongs here.
+- Any logic that customizes how an LSP behaves in a specific buffer (e.g., disabling formatting for tsserver) also belongs here.
+- UI tweaks like disabling handlers (textDocument/hover, etc.) can also be inside on_attach if they're per-client or per-buffer.
 --]]
+
 local M = {}
 
 M.on_attach = function(client, bufnr)
@@ -26,110 +23,82 @@ M.on_attach = function(client, bufnr)
   vim.bo[bufnr].omnifunc = ""
 
   -- Optional: Disable hover popup from LSP (but keep manual `K` key)
-  --vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+  -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
   --   vim.lsp.handlers.hover, { border = "none" }
   -- )
 
   -- Optional: Disable auto signature help popup from LSP (cmp handles it)
-  --vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+  -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
   --   vim.lsp.handlers.signature_help, { border = "none" }
   -- )
 
-  local map = function(keys, func, desc, mode)
-    mode = mode or 'n'        -- default to normal mode
+  -- Smarter keymap helper: auto-prepend "LSP:" to desc if provided
+  local function map(keys, func, desc, mode)
+    mode = mode or "n"
     vim.keymap.set(mode, keys, func, {
-      buffer = bufnr,         -- Only active in the LSP-attached buffer, buffer-local
-      desc = 'LSP: ' .. desc, -- Helps show key descriptions in which-key or Telescope
+      buffer = bufnr,
+      desc = desc and ("LSP: " .. desc) or nil,
     })
   end
 
-  -- NOTE:        What should go inside LspAttach?
-  --
-  -- Buffer-local keymaps for LSP functions (go-to-def, hover, rename, code actions, etc.).
-  -- Any client- or buffer-specific behavior that must happen per LSP attach.
-  -- Per-client capability checks like client_supports_method.
-  -- cmp dono got under LspAttach cause cm work individaully yes it takes helps from LSPs for that it's has no need to attach.
+  -- Capability checker: safer and more readable
+  local function supports(client, method)
+    return client.supports_method("textDocument/" .. method)
+  end
+
   -- ╭───────────────────────────╮
   -- │🛠️ Core LSP actions        │
   -- ╰───────────────────────────╯
-
-  -- Show hover documentation (e.g., function signature, comments)
-  -- map('K', vim.lsp.buf.hover, 'Hover Documentation')
-
-  -- Show signature help (parameters of a function during a call)
-  map('<C-k>', vim.lsp.buf.signature_help, 'Signature Help')
-
-  -- Rename symbol under the cursor (variables, functions, etc.)
-  map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-  -- Trigger code actions like "quick fix" (for errors, suggestions)
-  -- Works in both normal and visual mode.
-  map('gra', vim.lsp.buf.code_action, '[Code] [Action]', { 'n', 'v' })
+  if supports(client, "hover") then
+    map("K", vim.lsp.buf.hover, "Hover Documentation")
+  end
+  if supports(client, "signatureHelp") then
+    map("<C-k>", vim.lsp.buf.signature_help, "Signature Help")
+  end
+  map("grn", vim.lsp.buf.rename, "[R]e[n]ame")
+  map("gra", vim.lsp.buf.code_action, "[Code] [Action]", { "n", "v" })
 
   -- ╭─────────────────────────────────────────────╮
   -- │🔭 Navigation (using Telescope if available) │
   -- ╰─────────────────────────────────────────────╯
-
-
-  -- Go to references (usages of the symbol under the cursor)
-  map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
-
-  -- Go to definition (function/variable definition)
-  map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
-
-  -- Go to implementation (e.g., concrete implementation of an interface)
-  map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
-
-  -- Go to type definition (type of a variable or return type of a function)
-  map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
-
-  -- Go to declaration (e.g., header file declaration in C/C++)
-  map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-
-  -- ╭──────────────────────────────────────╮
-  -- │📄 Symbol search (local and global)   │
-  -- ╰──────────────────────────────────────╯
-
-
-  -- Fuzzy find all symbols in the current document (functions, vars, etc.)
-  map('gO', require('telescope.builtin').lsp_document_symbols, 'Document Symbols')
-
-  -- Fuzzy find all symbols in the entire workspace/project
-  map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Workspace Symbols')
+  local ok, telescope = pcall(require, "telescope.builtin")
+  if ok then
+    map("grr", telescope.lsp_references, "[G]oto [R]eferences")
+    map("grd", telescope.lsp_definitions, "[G]oto [D]efinition")
+    map("gri", telescope.lsp_implementations, "[G]oto [I]mplementation")
+    map("grt", telescope.lsp_type_definitions, "[G]oto [T]ype Definition")
+    map("gO", telescope.lsp_document_symbols, "Document Symbols")
+    map("gW", telescope.lsp_dynamic_workspace_symbols, "Workspace Symbols")
+    map("<leader>xx", telescope.diagnostics, "Workspace Diagnostics")
+    map("<leader>xd", function()
+      telescope.diagnostics({ bufnr = 0 })
+    end, "Document Diagnostics")
+  else
+    -- fallback: non-telescope mappings could be added here if desired
+    map("grD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+  end
 
   -- ╭─────────────────╮
   -- │🚨 Diagnostics   │
   -- ╰─────────────────╯
+  map("[d", function()
+    vim.diagnostic.jump({ count = -1, float = true })
+  end, "Previous Diagnostic")
+  map("]d", function()
+    vim.diagnostic.jump({ count = 1, float = true })
+  end, "Next Diagnostic")
+  map("<leader>ld", vim.diagnostic.open_float, "Line Diagnostics")
+  map("<leader>lq", vim.diagnostic.setloclist, "Diagnostics to Loclist")
 
-
-  -- Jump to previous and next diagnostics
-  map('[d', function() vim.diagnostic.jump({ count = -1, float = true }) end, 'Previous Diagnostic')
-  map(']d', function() vim.diagnostic.jump({ count = 1, float = true }) end, 'Next Diagnostic')
-
-  -- Open diagnostic message in a floating window
-  map('<leader>ld', vim.diagnostic.open_float, 'Line Diagnostics')
-
-  -- Send diagnostics to location list (so you can see all in a list)
-  map('<leader>lq', vim.diagnostic.setloclist, 'Diagnostics to Loclist')
-
-  -- Disable LSP native completion item preview
-  -- vim.opt.completeopt = { "menu", "menuone", "noselect" }
-
-
-  -- This ensures you only map things the server can actually do:
-  -- if client.server_capabilities.hoverProvider then
-  --   map('K', vim.lsp.buf.hover, 'Hover Documentation')
-  -- end
-  --
-  if client.server_capabilities.signatureHelpProvider then
-    map('<C-k>', vim.lsp.buf.signature_help, 'Signature Help')
+  -- ╭────────────────────────────╮
+  -- │⚙️ Client-specific settings │
+  -- ╰────────────────────────────╯
+  -- Disable formatting for some servers (use external formatter instead)
+  if supports(client, "formatting") then
+    if client.name == "tsserver" or client.name == "lua_ls" then
+      client.server_capabilities.documentFormattingProvider = false
+    end
   end
-
-  -- Disable formatting for some LSPs if needed
-  if client.name == "tsserver" or client.name == "lua_ls" then
-    client.server_capabilities.documentFormattingProvider = false
-  end
-  -- add more if needed
 end
 
 return M
