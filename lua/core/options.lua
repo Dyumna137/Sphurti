@@ -60,7 +60,7 @@ opt.splitright = true -- Vertical splits open to the right
 -- ╭────────────────────────────╮
 -- │ WRAPPING & SCROLLING       │
 -- ╰────────────────────────────╯
-opt.wrap = false                        -- Don't wrap long lines
+opt.wrap = true                         -- Don't wrap long lines
 opt.linebreak = true                    -- Wrap at word boundaries when wrapping
 opt.scrolloff = 4                       -- Minimum lines above/below cursor
 opt.sidescrolloff = 8                   -- Columns to keep left/right of cursor
@@ -79,7 +79,7 @@ opt.shortmess:append('c')                           -- No completion menu messag
 -- ╰────────────────────────────╯
 opt.iskeyword:append('-')                  -- Treat `foo-bar` as one word
 opt.formatoptions:remove { 'c', 'r', 'o' } -- Disable auto comment insertion
-
+vim.opt.textwidth = 0
 -- ╭────────────────────────────╮
 -- │ RUNTIME                    │
 -- ╰────────────────────────────╯
