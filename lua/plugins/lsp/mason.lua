@@ -1,23 +1,28 @@
 -- plugins/lsp/mason.lua
 --[[
-### 2. **`mason.lua`** — *Installing and managing language servers*
+### 2. **`mason.lua`** — Installing and managing language servers
 
-* This file handles **installing the LSP servers automatically** on your machine.
-* Mason is a tool that downloads and manages those LSP servers, so you don't install them manually.
-* Here you tell Mason:
+**Purpose:**  
+Automatically installs, manages, and keeps track of **LSP servers, linters, and formatters**.  
+Think of Mason as a **package manager for LSP tools**.
 
-  * "Install pyright for Python,"
-  * "Install lua_ls for Lua,"
-  * and so on.
-* Mason makes sure the servers exist on your computer.
+**Responsibilities:**
+1. Install and configure LSP servers (e.g., `pyright`, `lua_ls`, `tsserver`).
+2. Install additional tools like formatters and linters via `mason-tool-installer`.
+3. Connect installed servers to Neovim via `mason-lspconfig`.
+4. Ensure `on_attach` runs for servers that may not be managed by Mason (e.g., `jdtls`, typescript-tools).
 
-📌 In this config:
-- Mason + mason-lspconfig manage LSP server installation.
-- mason-tool-installer installs formatters/linters alongside servers.
-- Each LSP is set up with `on_attach` and enhanced `capabilities`.
-- An `LspAttach` autocmd ensures `on_attach` also runs for LSPs that
-  are not managed by mason-lspconfig (like jdtls, typescript-tools, etc.).
---]]
+**Benefits:**
+- Eliminates manual installation of language servers.
+- Ensures consistent LSP setup across machines.
+- Centralizes all LSP server management in one file.
+
+**Future Improvements:**
+- Add version pinning for reproducibility.
+- Auto-update servers or tools on startup.
+- Allow conditional server installation based on project type.
+- Integrate pre- and post-install hooks for custom setup.
+]]
 
 -- Mason base setup (UI, registry, paths)
 require("mason").setup()
