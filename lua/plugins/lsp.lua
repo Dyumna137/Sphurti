@@ -1,8 +1,34 @@
--- File: ~/.config/nvim/lua/plugins/lsp.lua
--- Purpose: Set up LSP servers, completion engine (cmp), and diagnostics.
--- Author: Dyumna, with help from ChatGPT, Kickstart
--- Future-me, don't forget to run `:Mason` to install LSP servers!
--- ─ ╰ ─ ╯ ─ ╭ ─ ╮
+--[[
+### **`lsp.lua`** — Central LSP orchestration
+
+**Purpose:**  
+Acts as the **central entry point** for all LSP-related configuration in Neovim.  
+Orchestrates server setup, diagnostics, buffer-local behavior, and integration with optional plugins.
+
+**Responsibilities:**
+1. Load Mason and ensure required servers are installed.
+2. Configure **global diagnostic behavior** (`vim.diagnostic.config`) for all buffers.
+3. Create an `LspAttach` autocmd:
+   - Calls `on_attach.lua` to set buffer-local keymaps and behavior.
+   - Sets up **document highlights**.
+   - Enables **autoformat-on-save** for clients supporting formatting.
+4. Optionally integrate plugins like `fidget.nvim`, `lspsaga.nvim`, or `trouble.nvim`.
+5. Serve as a central place to add **future LSP enhancements**, like custom per-client behavior or auto-completion hooks.
+
+**Key Points:**
+- Diagnostics configuration is **global**, runs once at startup.
+- Buffer-local behavior is delegated to `on_attach`.
+- Completion (nvim-cmp) can be added in a separate module (`autocompletion.lua`) to keep concerns separated.
+- Centralized orchestration ensures modularity, maintainability, and future scalability.
+
+**Future Improvements:**
+- Integrate nvim-cmp or other completion engines here via a separate module.
+- Add per-client customizations (e.g., `clangd` specific keymaps).
+- Support which-key groups for organized LSP keymaps.
+- Add logging or debugging hooks for LSP attach/detach events.
+- Add lazy-loading mechanisms for LSP plugins and servers.
+]]
+
 
 return {
   { -- Main LSP Configuration
@@ -50,6 +76,9 @@ return {
 
 
     config = function()
+          -- ╭──────────────────────────────────────╮
+          -- │  Global Diagnostics Configuration    │
+          -- ╰──────────────────────────────────────╯
       -- Diagnostic config (single call, merging signs floating and other settings)
       vim.diagnostic.config({
         virtual_text = false, -- disable inline virtual text
@@ -81,36 +110,10 @@ return {
         },
       })
       -- For python formatting
-      vim.api.nvim_create_user_command("RuffAutofix", function() -- Run :RuffAutofix → all auto-fixable issues are fixed.
-        local bufnr = vim.api.nvim_get_current_buf()
-        local params = {
-          command = "ruff.applyAutofix",
-          arguments = {
-            {
-              uri = vim.uri_from_bufnr(bufnr),
-              version = vim.lsp.util.buf_versions[bufnr] or 0,
-            }
-          }
-        }
-        vim.lsp.buf_request(bufnr, "workspace/executeCommand", params, function(_, _, _, _) end)
-      end, { desc = "Ruff: Fix all auto-fixable problems" })
 
-      vim.api.nvim_create_user_command("RuffOrganizeImports",
-        function() -- Run :RuffOrganizeImports → imports are automatically sorted/cleaned.
-          local bufnr = vim.api.nvim_get_current_buf()
-          local params = {
-            command = "ruff.applyOrganizeImports",
-            arguments = {
-              {
-                uri = vim.uri_from_bufnr(bufnr),
-                version = vim.lsp.util.buf_versions[bufnr] or 0,
-              }
-            }
-          }
-          vim.lsp.buf_request(bufnr, "workspace/executeCommand", params, function(_, _, _, _) end)
-        end, { desc = "Ruff: Organize imports" })
-
-
+          -- ╭─────────────────────────────────╮
+          -- │ Load Mason (server installer)   │
+          -- ╰─────────────────────────────────╯
 
 
       require("plugins.lsp.mason") -- Setup Mason and install servers
@@ -187,7 +190,7 @@ return {
         callback = function(event)
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if not client then
-            print("No client found on attach")
+            -- print("No client found on attach")
             return -- client is nil, so do nothing
             --[[
               event.data.client_id always exists in LspAttach event.
@@ -199,16 +202,8 @@ return {
           local bufnr = event.buf
 
 
-          -- -- [Helper] Define buffer-local keymaps easily.
-          -- -- This avoids repeating boilerplate for mode, buffer, and description.
-          -- -- Later, you can extract this helper globally if you want to reuse it outside LSP.
-          -- local map = function(keys, func, desc, mode)
-          --   mode = mode or 'n'        -- default to normal mode
-          --   vim.keymap.set(mode, keys, func, {
-          --     buffer = event.buf,     -- Only active in the LSP-attached buffer
-          --     desc = 'LSP: ' .. desc, -- Helps show key descriptions in which-key or Telescope
-          --   })
-          -- end
+          -- Delegate keymaps and buffer-local behaviors to on_attach.lua
+           require("plugins.lsp.on_attach").on_attach(client, bufnr)
           --
           -- NOTE:        What should go inside LspAttach?
           --
@@ -223,38 +218,21 @@ return {
           -- ╭───────────────────────────────────────────╮
           -- │🧠 Future Improvements You Can Add Here    │
           -- ╰───────────────────────────────────────────╯
-          -- You can setup your keymaps here (example)
-          -- vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr })
-          print("LSP client attached: " .. client.name)
-          -- Set up autoformat on save for clients that support formatting
-          if client.server_capabilities and client.server_capabilities.documentFormattingProvider then
-            print("Client supports formatting")
-            vim.api.nvim_create_autocmd('BufWritePre', {
-              group = vim.api.nvim_create_augroup('LspFormatOnSave', { clear = false }),
+          if client.server_capabilities.documentFormattingProvider then
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              group = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = false }),
               buffer = bufnr,
               callback = function()
                 vim.lsp.buf.format({
                   bufnr = bufnr,
                   filter = function(fmt_client)
-                    -- Optionally restrict formatting to specific clients, e.g., null-ls only
                     return fmt_client.name == "null-ls" or fmt_client.id == client.id
                   end,
                   timeout_ms = 2000,
                 })
               end,
             })
-          else
-            print("Formatting not supported by client")
           end
-          -- 1. Extract `map` to a global utility file (e.g., `lua/utils/keymap.lua`)
-          -- 2. Add formatting keymap:
-          --    map('<leader>lf', function() vim.lsp.buf.format({ async = true }) end, 'Format Code')
-          -- 3. Integrate plugins like `lspsaga`, `trouble`, or `fidget.nvim` for enhanced UX
-          -- 4. Add client-specific conditions:
-          --    if client.name == 'clangd' then ... (custom C/C++ behaviors)
-          -- 5. Add which-key support to organize LSP keymaps under a `+lsp` group
-
-          -- Setup nvim-cmp completion mapping inside LSP attach if needed
           -- ╭───────────────────────────────╮
           -- │🤖⚙️AUTOCOMPLETION (nvim-cmp)  │
           -- ╰───────────────────────────────╯
