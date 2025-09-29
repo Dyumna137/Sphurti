@@ -119,22 +119,31 @@ M.on_attach = function(client, bufnr)
   -- ╭───────────────────────╮
   -- │ Autoformat (toggle)   │
   -- ╰───────────────────────╯
-  local format_enabled = true
-  bufmap(bufnr, "<leader>tf", function()
-    format_enabled = not format_enabled
-    vim.notify("Format on save: " .. (format_enabled and "enabled" or "disabled"))
-  end, "Toggle Format on Save")
+-- inside on_attach(client, bufnr)
 
-  if client.server_capabilities.documentFormattingProvider then
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      buffer = bufnr,
-      callback = function()
-        if format_enabled then
-          vim.lsp.buf.format({ bufnr = bufnr })
-        end
-      end,
-    })
-  end
+-- toggle state per buffer
+local format_enabled = true
+
+-- toggle keymap
+bufmap(bufnr, "<leader>tf", function()
+  format_enabled = not format_enabled
+  vim.notify("Format on save: " .. (format_enabled and "enabled" or "disabled"))
+end, "Toggle Format on Save")
+
+-- safe autocmd with augroup
+if client.server_capabilities.documentFormattingProvider then
+  local group = vim.api.nvim_create_augroup("LspFormat." .. bufnr, { clear = true })
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = group,
+    buffer = bufnr,
+    callback = function()
+      if format_enabled then
+        vim.lsp.buf.format({ bufnr = bufnr, async = false })
+      end
+    end,
+  })
+end
+
 
   -- ╭───────────────────────╮
   -- │ Document Highlight    │
