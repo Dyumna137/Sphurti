@@ -1,16 +1,36 @@
---[[
-### 1. **`on_attach.lua`** — Buffer-local behavior for LSP clients
+--[[============================================================================
+# 📄 `on_attach.lua` — Buffer-local behavior for Neovim LSP clients
 
-**Purpose:**  
-Defines behavior that only applies to a specific buffer **when a language server attaches**.  
+## 🔎 Purpose
+This module defines **all buffer-local behavior** for Neovim’s LSP clients.  
+It ensures keymaps, formatting, and highlights are only active in buffers where
+an LSP is actually attached.
 
-**Features in this version:**
-- Buffer-local LSP keymaps (hover, rename, code action, diagnostics, navigation).  
-- Telescope integration if available, fallback otherwise.  
-- DRY diagnostic navigation.  
-- Format-on-save **with toggle (`<leader>tf`)**.  
-- Client-specific tweaks using a hook table.  
-- Document highlight support.  
+Neovim’s `LspAttach` autocmd calls this file’s `on_attach` function, passing in
+the `client` and `bufnr`. From there, everything configured here applies only
+to that buffer.
+
+---
+
+## 🧩 Responsibilities
+1. Define **buffer-local keymaps** for LSP actions:
+   - Hover docs, rename, code actions, diagnostics navigation, etc.
+   - Telescope-powered navigation if Telescope is installed.
+2. Configure **autoformat-on-save** for clients that support formatting.
+3. Disable formatting for specific servers (e.g., `tsserver`, `lua_ls`).
+4. Set up **document highlights** (references under cursor).
+5. Provide helpers:
+   - `supports(client, method)` → checks if the client supports a capability.
+   - `bufmap(bufnr, key, func, desc, mode)` → clean buffer-local keymapping.
+
+---
+
+## 🔧 Example usage:
+```lua
+-- Inside LspAttach callback
+local on_attach = require("plugins.lsp.on_attach").on_attach
+on_attach(client, bufnr)
+ 
 ]]
 
 local M = {}
