@@ -3,36 +3,17 @@
 
 **Purpose:**  
 Defines behavior that only applies to a specific buffer **when a language server attaches**.  
-This ensures that keymaps, autoformatting, and document highlights are only active for buffers with an LSP client.
 
-**Responsibilities:**
-1. Define buffer-local keymaps for LSP actions:
-   - `K` → hover documentation
-   - `<leader>rn` → rename symbol
-   - `<leader>ca` → code actions
-   - Navigation mappings (`gd`, `grd`, `gri`, `grt`, etc.)
-2. Set up **document highlights** if supported by the client.
-3. Configure **autoformat on save** for clients that support formatting.
-4. Disable certain capabilities selectively (e.g., formatting for `tsserver` or `lua_ls`).
-5. Provide helpers for safe, readable buffer-local keymaps and capability checks.
-
-**Example Usage:**
-```lua
--- Inside on_attach function
-- bufmap(bufnr, "K", vim.lsp.buf.hover, "Hover Documentation")
-- bufmap(bufnr, "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
-- All LSP-specific mappings should go inside `on_attach`.
-- Any behavior depending on the capabilities of the attached client (like `hoverProvider`) belongs here.
-- Any logic that customizes how an LSP behaves in a specific buffer (e.g., disabling formatting for tsserver) belongs here.
-- UI tweaks like disabling handlers (`textDocument/hover`, etc.) can also be inside `on_attach` if they're per-client or per-buffer.
+**Features in this version:**
+- Buffer-local LSP keymaps (hover, rename, code action, diagnostics, navigation).  
+- Telescope integration if available, fallback otherwise.  
+- DRY diagnostic navigation.  
+- Format-on-save **with toggle (`<leader>tf`)**.  
+- Client-specific tweaks using a hook table.  
+- Document highlight support.  
 ]]
 
 local M = {}
-
--- helper: check if the LSP client supports a method
-local function supports(client, method)
-  return client.supports_method("textDocument/" .. method)
-end
 
 -- helper: multi-mode buffer keymap
 local function bufmap(bufnr, key, func, desc, mode)
@@ -46,6 +27,17 @@ local function bufmap(bufnr, key, func, desc, mode)
   end
 end
 
+-- client-specific overrides
+-- This avoids hardcoding "textDocument/" everywhere.
+local client_specific = {
+  tsserver = function(client, _)
+    client.server_capabilities.documentFormattingProvider = false
+  end,
+  lua_ls = function(client, _)
+    client.server_capabilities.documentFormattingProvider = false
+  end,
+}
+
 M.on_attach = function(client, bufnr)
   -- 🔒 Prevent native LSP completion popup
   vim.bo[bufnr].omnifunc = ""
@@ -53,10 +45,10 @@ M.on_attach = function(client, bufnr)
   -- ╭───────────────────────────╮
   -- │🛠️ Core LSP actions        │
   -- ╰───────────────────────────╯
-  if supports(client, "hover") then
+  if client.server_capabilities.hoverProvider then
     bufmap(bufnr, "K", vim.lsp.buf.hover, "Hover Documentation")
   end
-  if supports(client, "signatureHelp") then
+  if client.server_capabilities.signatureHelpProvider then
     bufmap(bufnr, "<C-k>", vim.lsp.buf.signature_help, "Signature Help")
   end
 
@@ -85,28 +77,41 @@ M.on_attach = function(client, bufnr)
   -- ╭─────────────────╮
   -- │🚨 Diagnostics   │
   -- ╰─────────────────╯
-  bufmap(bufnr, "[d", function() vim.diagnostic.jump({ count = -1, float = true }) end, "Previous Diagnostic")
-  bufmap(bufnr, "]d", function() vim.diagnostic.jump({ count = 1, float = true }) end, "Next Diagnostic")
+  -- Cleaner diagnostic maps with a loop.
+  for _, d in ipairs({
+    { "[d", -1, "Previous" },
+    { "]d", 1, "Next" },
+  }) do
+    bufmap(bufnr, d[1], function()
+      vim.diagnostic.jump({ count = d[2], float = true })
+    end, d[3] .. " Diagnostic")
+  end
   bufmap(bufnr, "<leader>ld", vim.diagnostic.open_float, "Line Diagnostics")
   bufmap(bufnr, "<leader>lq", vim.diagnostic.setloclist, "Diagnostics to Loclist")
 
   -- ╭────────────────────────────╮
   -- │⚙️ Client-specific settings │
   -- ╰────────────────────────────╯
-  if supports(client, "formatting") then
-    if client.name == "tsserver" or client.name == "lua_ls" then
-      client.server_capabilities.documentFormattingProvider = false
-    end
+  if client_specific[client.name] then
+    client_specific[client.name](client, bufnr)
   end
 
   -- ╭───────────────────────╮
-  -- │ Autoformat (optional) │
+  -- │ Autoformat (toggle)   │
   -- ╰───────────────────────╯
+  local format_enabled = true
+  bufmap(bufnr, "<leader>tf", function()
+    format_enabled = not format_enabled
+    vim.notify("Format on save: " .. (format_enabled and "enabled" or "disabled"))
+  end, "Toggle Format on Save")
+
   if client.server_capabilities.documentFormattingProvider then
     vim.api.nvim_create_autocmd("BufWritePre", {
       buffer = bufnr,
       callback = function()
-        vim.lsp.buf.format({ bufnr = bufnr, async = true })
+        if format_enabled then
+          vim.lsp.buf.format({ bufnr = bufnr })
+        end
       end,
     })
   end
@@ -114,7 +119,7 @@ M.on_attach = function(client, bufnr)
   -- ╭───────────────────────╮
   -- │ Document Highlight    │
   -- ╰───────────────────────╯
-  if supports(client, "documentHighlight") then
+  if client.server_capabilities.documentHighlightProvider then
     local hl_grp = vim.api.nvim_create_augroup("lsp_document_highlight_" .. bufnr, { clear = true })
     vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
       group = hl_grp,
