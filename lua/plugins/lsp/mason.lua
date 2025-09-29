@@ -123,12 +123,12 @@ local extra_tools = {
 }
 
 -- 📌 Autocommands for filetype-specific setups (e.g. Java)
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "java" },
-  callback = function()
-    require("plugins.lsp.ft.java").setup()
-  end,
-})
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = { "java" },
+--   callback = function()
+--     require("plugins.lsp.ft.java").setup()
+--   end,
+-- })
 
 -- 🧩 Combine LSP servers and tools into one install list
 local ensure_installed = vim.tbl_keys(servers)
