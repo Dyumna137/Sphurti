@@ -1,8 +1,8 @@
 --[[
 ### **`lsp.lua`** — Central LSP orchestration
 
-**Purpose:**  
-Acts as the **central entry point** for all LSP-related configuration in Neovim.  
+**Purpose:**
+Acts as the **central entry point** for all LSP-related configuration in Neovim.
 Orchestrates server setup, diagnostics, buffer-local behavior, and integration with optional plugins.
 
 **Responsibilities:**
@@ -76,14 +76,14 @@ return {
 
 
     config = function()
-          -- ╭──────────────────────────────────────╮
-          -- │  Global Diagnostics Configuration    │
-          -- ╰──────────────────────────────────────╯
+      -- ╭──────────────────────────────────────╮
+      -- │  Global Diagnostics Configuration    │
+      -- ╰──────────────────────────────────────╯
       -- Diagnostic config (single call, merging signs floating and other settings)
       vim.diagnostic.config({
         virtual_text = false, -- disable inline virtual text
         float = {
-          border = "rounded", -- 🔵 Rounded border
+          border = "rounded", --  Rounded border
           source = true,      -- show source like [clangd]
           header = "",        -- show source like [clangd]
           prefix = "",        -- Optional: no bullet points
@@ -111,42 +111,15 @@ return {
       })
       -- For python formatting
 
-          -- ╭─────────────────────────────────╮
-          -- │ Load Mason (server installer)   │
-          -- ╰─────────────────────────────────╯
+      -- ╭─────────────────────────────────╮
+      -- │ Load Mason (server installer)   │
+      -- ╰─────────────────────────────────╯
 
 
       require("plugins.lsp.mason") -- Setup Mason and install servers
       -- require("plugins.lsp.servers")  -- Configure and start language servers -- WARN: Remember here i donot include server for lsp configurations
 
-      -- NOTE: Brief aside: **What is LSP?**
-      --
-      -- 🧠LSP is an initialism you've probably heard, but might not understand what it is.
-      --
-      -- LSP stands for Language Server Protocol. It's a protocol that helps editors
-      -- and language tooling communicate in a standardized fashion.
-      --
-      -- In general, you have a "server" which is some tool built to understand a particular
-      -- language (such as `gopls`, `lua_ls`, `rust_analyzer`, etc.). These Language Servers
-      -- (sometimes called LSP servers, but that's kind of like ATM Machine) are standalone
-      -- processes that communicate with some "client" - in this case, Neovim!
-      --
-      -- It gives your editor smart features like: think of it a language assistance
-      --
-      -- 🔍 Go to definition
-      -- ℹ️ Hover for documentation
-      -- 🚨 Show diagnostics (errors, warnings)
-      -- 🧹 Auto-fix code (formatting, etc.)
-      -- 🧠 Code completion (works with cmp)
-      --
-      -- Thus, Language Servers are external tools that must be installed separately from
-      -- Neovim. This is where `mason` and related plugins come into play.
-      --
 
-      -- This autocmd runs only when an LSP client attaches to a buffer.
-      -- It's more efficient than setting global keymaps because it ensures
-      -- that keymaps are only active when an LSP is actually present.
-      -- Cache this once, outside the function
       local has_nvim_011 = vim.fn.has("nvim-0.11") == 1
       ---@param client vim.lsp.Client
       ---@param method vim.lsp.protocol.Method
@@ -203,7 +176,7 @@ return {
 
 
           -- Delegate keymaps and buffer-local behaviors to on_attach.lua
-           require("plugins.lsp.on_attach").on_attach(client, bufnr)
+          require("plugins.lsp.on_attach").on_attach(client, bufnr)
           --
           -- NOTE:        What should go inside LspAttach?
           --
@@ -212,35 +185,23 @@ return {
           -- Per-client capability checks like client_supports_method.
           -- cmp dono got under LspAttach cause cm work individaully yes it takes helps from LSPs for that it's has no need to attach.
           -- ╭───────────────────────────╮
-          -- │🛠️ Core LSP actions        │
+          -- │ Core LSP actions          │
           -- ╰───────────────────────────╯
           -- it's empty for now if want anything to attacah you can
           -- ╭───────────────────────────────────────────╮
-          -- │🧠 Future Improvements You Can Add Here    │
+          -- │ Future Improvements You Can Add Here      │
           -- ╰───────────────────────────────────────────╯
-          if client.server_capabilities.documentFormattingProvider then
-            vim.api.nvim_create_autocmd("BufWritePre", {
-              group = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = false }),
-              buffer = bufnr,
-              callback = function()
-                vim.lsp.buf.format({
-                  bufnr = bufnr,
-                  filter = function(fmt_client)
-                    return fmt_client.name == "null-ls" or fmt_client.id == client.id
-                  end,
-                  timeout_ms = 2000,
-                })
-              end,
-            })
-          end
+
+          -- NOTE: I remove autoformatting on save using null-ls cause now i have a file of nul-ls.lua.
+
           -- ╭───────────────────────────────╮
-          -- │🤖⚙️AUTOCOMPLETION (nvim-cmp)  │
+          -- │AUTOCOMPLETION (nvim-cmp)      │
           -- ╰───────────────────────────────╯
           -- a better completion is there in autocompletion.lua under lua\plugins folder,
 
 
           -- ╭───────────────────────────╮
-          -- │🖍️Document Highlight       │
+          -- │Document Highlight         │
           -- ╰───────────────────────────╯
           -- Document Highlight if supported
           -- local client = vim.lsp.get_client_by_id(event.data.client_id) -- already defined ` local client ` at 209 line
