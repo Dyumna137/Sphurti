@@ -2,40 +2,64 @@
 # 📄 `on_attach.lua` — Buffer-local behavior for Neovim LSP clients
 
 ## 🔎 Purpose
-This module defines **all buffer-local behavior** for Neovim’s LSP clients.  
-It ensures keymaps, formatting, and highlights are only active in buffers where
-an LSP is actually attached.
+Defines **all buffer-local behavior** for Neovim’s LSP clients.  
+Ensures that keymaps, formatting, and highlights are active **only** in buffers
+where an LSP is attached.  
 
-Neovim’s `LspAttach` autocmd calls this file’s `on_attach` function, passing in
-the `client` and `bufnr`. From there, everything configured here applies only
-to that buffer.
+This is the single entrypoint used in your `LspAttach` callback.
 
 ---
 
 ## 🧩 Responsibilities
-1. Define **buffer-local keymaps** for LSP actions:
-   - Hover docs, rename, code actions, diagnostics navigation, etc.
-   - Telescope-powered navigation if Telescope is installed.
-2. Configure **autoformat-on-save** for clients that support formatting.
-3. Disable formatting for specific servers (e.g., `tsserver`, `lua_ls`).
-4. Set up **document highlights** (references under cursor).
-5. Provide helpers:
-   - `supports(client, method)` → checks if the client supports a capability.
-   - `bufmap(bufnr, key, func, desc, mode)` → clean buffer-local keymapping.
+1. Provide **buffer-local keymaps** for core LSP features:
+   - Hover, signature help, rename, code actions.
+   - Navigation (with Telescope if available).
+   - Diagnostics (jump, float, loclist).
+2. Configure **formatting**:
+   - `<leader>F` → Manual format (always available).
+   - `<leader>tf` → Toggle autoformat-on-save (per buffer).
+   - Autoformat runs only if supported by the client.
+3. Apply **client-specific overrides**:
+   - Disable formatting for unwanted servers (`tsserver`, `lua_ls`).
+4. Enable **document highlights**:
+   - Highlights references under the cursor, clears on movement.
+5. Expose **statusline helper**:
+   - `format_status()` → returns `" fmt:on"` or `" fmt:off"` per buffer.
 
 ---
 
-## 🔧 Example usage:
+## 🎯 Design Decisions
+- **Per-buffer toggle** → formatting state is stored in `vim.b[bufnr]`.
+- **Clear augroups** → each buffer gets its own `LspFormat.<bufnr>` group.
+- **Separation of concerns**:
+  - Manual formatting (`<leader>F`) is always available.
+  - Autoformat is opt-in and toggleable.
+- **Minimal dependencies** → Telescope is optional, rest is native LSP.
+- **Statusline integration** → quick visual feedback of format state.
+
+---
+
+## 🔧 Example Usage
 ```lua
--- Inside LspAttach callback
+-- Inside LspAttach autocmd:
 local on_attach = require("plugins.lsp.on_attach").on_attach
 on_attach(client, bufnr)
- 
-]]
+
+-- In lualine config:
+lualine_x = {
+  require("plugins.lsp.on_attach").format_status,
+  "encoding", "filetype"
+}
+
+
+============================================================================]]
+
 
 local M = {}
 
--- helper: multi-mode buffer keymap
+-- ╭──────────────────────────────╮
+-- │ Helper: buffer-local keymap  │
+-- ╰──────────────────────────────╯
 local function bufmap(bufnr, key, func, desc, mode)
   mode = mode or "n"
   if type(mode) == "table" then
@@ -47,8 +71,9 @@ local function bufmap(bufnr, key, func, desc, mode)
   end
 end
 
--- client-specific overrides
--- This avoids hardcoding "textDocument/" everywhere.
+-- ╭──────────────────────────────╮
+-- │ Client-specific overrides    │
+-- ╰──────────────────────────────╯
 local client_specific = {
   tsserver = function(client, _)
     client.server_capabilities.documentFormattingProvider = false
@@ -58,95 +83,55 @@ local client_specific = {
   end,
 }
 
+-- ╭──────────────────────────────╮
+-- │ Main on_attach entrypoint    │
+-- ╰──────────────────────────────╯
 M.on_attach = function(client, bufnr)
   -- 🔒 Prevent native LSP completion popup
   vim.bo[bufnr].omnifunc = ""
 
-  -- ╭───────────────────────────╮
-  -- │🛠️ Core LSP actions        │
-  -- ╰───────────────────────────╯
-  if client.server_capabilities.hoverProvider then
-    bufmap(bufnr, "K", vim.lsp.buf.hover, "Hover Documentation")
-  end
-  if client.server_capabilities.signatureHelpProvider then
-    bufmap(bufnr, "<C-k>", vim.lsp.buf.signature_help, "Signature Help")
-  end
-
-  bufmap(bufnr, "<leader>rn", vim.lsp.buf.rename, "Rename")
-  bufmap(bufnr, "<leader>ca", vim.lsp.buf.code_action, "Code Action", { "n", "v" })
-
-  -- ╭────────────────────────────╮
-  -- │🔭 Navigation (Telescope)   │
-  -- ╰────────────────────────────╯
-  local ok, telescope = pcall(require, "telescope.builtin")
-  if ok then
-    bufmap(bufnr, "grr", telescope.lsp_references, "[G]oto [R]eferences")
-    bufmap(bufnr, "grd", telescope.lsp_definitions, "[G]oto [D]efinition")
-    bufmap(bufnr, "gri", telescope.lsp_implementations, "[G]oto [I]mplementation")
-    bufmap(bufnr, "grt", telescope.lsp_type_definitions, "[G]oto [T]ype Definition")
-    bufmap(bufnr, "gO", telescope.lsp_document_symbols, "Document Symbols")
-    bufmap(bufnr, "gW", telescope.lsp_dynamic_workspace_symbols, "Workspace Symbols")
-    bufmap(bufnr, "<leader>xx", telescope.diagnostics, "Workspace Diagnostics")
-    bufmap(bufnr, "<leader>xd", function()
-      telescope.diagnostics({ bufnr = 0 })
-    end, "Document Diagnostics")
-  else
-    bufmap(bufnr, "grD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
-  end
-
-  -- ╭─────────────────╮
-  -- │🚨 Diagnostics   │
-  -- ╰─────────────────╯
-  -- Cleaner diagnostic maps with a loop.
-  for _, d in ipairs({
-    { "[d", -1, "Previous" },
-    { "]d", 1, "Next" },
-  }) do
-    bufmap(bufnr, d[1], function()
-      vim.diagnostic.jump({ count = d[2], float = true })
-    end, d[3] .. " Diagnostic")
-  end
-  bufmap(bufnr, "<leader>ld", vim.diagnostic.open_float, "Line Diagnostics")
-  bufmap(bufnr, "<leader>lq", vim.diagnostic.setloclist, "Diagnostics to Loclist")
-
-  -- ╭────────────────────────────╮
-  -- │⚙️ Client-specific settings │
-  -- ╰────────────────────────────╯
-  if client_specific[client.name] then
-    client_specific[client.name](client, bufnr)
-  end
-
   -- ╭───────────────────────╮
-  -- │ Autoformat (toggle)   │
+  -- │ 📝 Formatting toggle  │
   -- ╰───────────────────────╯
--- inside on_attach(client, bufnr)
+  if client.server_capabilities.documentFormattingProvider then
+    -- Store toggle state per buffer
+    vim.b[bufnr].format_enabled = true
 
--- toggle state per buffer
-local format_enabled = true
+    -- Manual formatting
+    bufmap(bufnr, "<leader>F", function()
+      vim.lsp.buf.format({
+        bufnr = bufnr,
+        async = true,
+        filter = function(c)
+          return c.name == "null-ls" or c.name == client.name
+        end,
+      })
+      vim.notify("Formatted buffer with " .. client.name, vim.log.levels.INFO)
+    end, "Format buffer manually")
 
--- toggle keymap
-bufmap(bufnr, "<leader>tf", function()
-  format_enabled = not format_enabled
-  vim.notify("Format on save: " .. (format_enabled and "enabled" or "disabled"))
-end, "Toggle Format on Save")
+    -- Toggle autoformat
+    bufmap(bufnr, "<leader>tf", function()
+      vim.b[bufnr].format_enabled = not vim.b[bufnr].format_enabled
+      vim.notify("Format on save: " ..
+        (vim.b[bufnr].format_enabled and "ENABLED ✅" or "DISABLED ⛔"))
+    end, "Toggle Format on Save")
 
--- safe autocmd with augroup
-if client.server_capabilities.documentFormattingProvider then
-  local group = vim.api.nvim_create_augroup("LspFormat." .. bufnr, { clear = true })
-  vim.api.nvim_create_autocmd("BufWritePre", {
-    group = group,
-    buffer = bufnr,
-    callback = function()
-      if format_enabled then
-        vim.lsp.buf.format({ bufnr = bufnr, async = false })
-      end
-    end,
-  })
-end
-
+    -- Autoformat before save
+    local group = vim.api.nvim_create_augroup("LspFormat." .. bufnr, { clear = true })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      group = group,
+      buffer = bufnr,
+      callback = function()
+        if vim.b[bufnr].format_enabled then
+          vim.lsp.buf.format({ bufnr = bufnr, async = false })
+        end
+      end,
+      desc = "Autoformat before save",
+    })
+  end
 
   -- ╭───────────────────────╮
-  -- │ Document Highlight    │
+  -- │ ✨ Document Highlight │
   -- ╰───────────────────────╯
   if client.server_capabilities.documentHighlightProvider then
     local hl_grp = vim.api.nvim_create_augroup("lsp_document_highlight_" .. bufnr, { clear = true })
@@ -161,6 +146,14 @@ end
       callback = vim.lsp.buf.clear_references,
     })
   end
+end
+
+-- ╭──────────────────────────────╮
+-- │ Statusline integration       │
+-- ╰──────────────────────────────╯
+function M.format_status()
+  if vim.b.format_enabled == nil then return "" end
+  return vim.b.format_enabled and " fmt:on" or " fmt:off"
 end
 
 return M
