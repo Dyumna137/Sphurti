@@ -2,7 +2,7 @@
 -- ➡️ This sets up the tools (like Black, isort, stylua, prettier) that will do the actual formatting.
 --
 -- NOTE: Think of this as:
--- 🧰 “Configure formatters and linters for each filetype”
+--  “Configure formatters and linters for each filetype”
 
 -- require("custom.plugins.none-ls")       -- sets up formatters
 -- require("custom.autoformat").setup_autosave()  -- sets up auto-format-on-save
@@ -24,50 +24,45 @@
 -- File: ~/.config/nvim/lua/plugins/null-ls.lua
 return {
   "nvimtools/none-ls.nvim",
-  enable = false,
-  event = "BufReadPre", -- load only when opening a file
+  enable = true,
+  event = "BufReadPre",
   opts = function()
-    local null_ls = require("plugins.null-ls")
+    local null_ls = require("null-ls")
 
     return {
       sources = {
-        -- 🔧 Python
-        null_ls.builtins.formatting.black.with({
-          extra_args = { "--fast" },
-        }),
+        -- Python
+        null_ls.builtins.formatting.black.with({ extra_args = { "--fast" } }),
         null_ls.builtins.formatting.isort,
         null_ls.builtins.diagnostics.flake8,
 
-        -- 🌙 Lua
+        -- Lua
         null_ls.builtins.formatting.stylua,
 
-        -- 🌐 Web (JS/TS/HTML/CSS)
-        null_ls.builtins.formatting.prettier.with({
-          filetypes = { "javascript", "typescript", "html", "css", "json" },
-        }),
+        -- C/C++
+        null_ls.builtins.formatting.clang_format,
 
-        -- 📝 Markdown
-        null_ls.builtins.formatting.markdownlint,
-        null_ls.builtins.diagnostics.markdownlint,
+        -- Rust
+        null_ls.builtins.formatting.rustfmt,
 
-        -- 🧪 Shell
-        null_ls.builtins.formatting.shfmt,
-        null_ls.builtins.diagnostics.shellcheck,
+        -- C# (via dotnet format)
+        null_ls.builtins.formatting.dotnet_format,
       },
-      -- Format on save support (optional)
+
+      -- Disable autoformat-on-save; manual only
       on_attach = function(client, bufnr)
-        if client.supports_method("textDocument/formatting") then
-          vim.api.nvim_clear_autocmds({ group = "LspFormatting", buffer = bufnr })
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            group = vim.api.nvim_create_augroup("LspFormatting", { clear = true }),
-            buffer = bufnr,
-            callback = function()
-              vim.lsp.buf.format({ bufnr = bufnr })
+        vim.keymap.set("n", "<leader>F", function()
+          vim.lsp.buf.format({
+            async = true,
+            filter = function(client)
+              return client.name == "null-ls"
             end,
-            desc = "[null-ls] Format on Save",
+            callback = function()
+              vim.notify("Buffer formatted successfully ✅", vim.log.levels.INFO)
+            end,
           })
-        end
+        end, { buffer = bufnr, desc = "Format buffer manually" })
       end,
-    }
+    }   
   end,
-}
+}  
