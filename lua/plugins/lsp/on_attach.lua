@@ -1,59 +1,43 @@
---[[============================================================================
-# 📄 `on_attach.lua` — Buffer-local behavior for Neovim LSP clients
+--[[
+==============================================================================
+📄 on_attach.lua — Buffer-local behavior for Neovim LSP clients
 
-## 🔎 Purpose
-Defines **all buffer-local behavior** for Neovim’s LSP clients.  
-Ensures that keymaps, formatting, and highlights are active **only** in buffers
-where an LSP is attached.  
+🔎 Purpose
+----------
+Defines all buffer-local behavior when an LSP client attaches to a buffer.
+Formatting is fully delegated to your null-ls hybrid config, but this module
+still exposes a `format_status()` helper for your statusline, wired to the
+global toggle.
 
-This is the single entrypoint used in your `LspAttach` callback.
+🧩 Responsibilities
+-------------------
+1. Set up buffer-local keymaps for LSP features.
+2. Apply client-specific overrides (disable formatting, etc.).
+3. Enable document highlights when supported.
+4. Provide a statusline helper `format_status()` to reflect the
+   current formatting toggle state (from null-ls).
 
----
+🎯 Design Decisions
+-------------------
+- Single responsibility: no formatting logic in on_attach.
+- Global formatting control lives in null-ls, shared everywhere.
+- Keep `format_status()` here to make lualine integration simple.
+- Each buffer gets isolated autocmd groups (no leaks).
 
-## 🧩 Responsibilities
-1. Provide **buffer-local keymaps** for core LSP features:
-   - Hover, signature help, rename, code actions.
-   - Navigation (with Telescope if available).
-   - Diagnostics (jump, float, loclist).
-2. Configure **formatting**:
-   - `<leader>F` → Manual format (always available).
-   - `<leader>tf` → Toggle autoformat-on-save (per buffer).
-   - Autoformat runs only if supported by the client.
-3. Apply **client-specific overrides**:
-   - Disable formatting for unwanted servers (`tsserver`, `lua_ls`).
-4. Enable **document highlights**:
-   - Highlights references under the cursor, clears on movement.
-5. Expose **statusline helper**:
-   - `format_status()` → returns `" fmt:on"` or `" fmt:off"` per buffer.
-
----
-
-## 🎯 Design Decisions
-- **Per-buffer toggle** → formatting state is stored in `vim.b[bufnr]`.
-- **Clear augroups** → each buffer gets its own `LspFormat.<bufnr>` group.
-- **Separation of concerns**:
-  - Manual formatting (`<leader>F`) is always available.
-  - Autoformat is opt-in and toggleable.
-- **Minimal dependencies** → Telescope is optional, rest is native LSP.
-- **Statusline integration** → quick visual feedback of format state.
-
----
-
-## 🔧 Example Usage
-```lua
--- Inside LspAttach autocmd:
+🔧 Example Usage
+---------------
+-- In LspAttach autocmd:
 local on_attach = require("plugins.lsp.on_attach").on_attach
 on_attach(client, bufnr)
 
--- In lualine config:
+-- In lualine:
 lualine_x = {
   require("plugins.lsp.on_attach").format_status,
   "encoding", "filetype"
 }
 
-
-============================================================================]]
-
+==============================================================================
+]]
 
 local M = {}
 
@@ -87,52 +71,22 @@ local client_specific = {
 -- │ Main on_attach entrypoint    │
 -- ╰──────────────────────────────╯
 M.on_attach = function(client, bufnr)
-  -- 🔒 Prevent native LSP completion popup
+  -- Disable LSP omnifunc completion (prefer cmp or other sources)
   vim.bo[bufnr].omnifunc = ""
 
-  -- ╭───────────────────────╮
-  -- │ 📝 Formatting toggle  │
-  -- ╰───────────────────────╯
-  if client.server_capabilities.documentFormattingProvider then
-    -- Store toggle state per buffer
-    vim.b[bufnr].format_enabled = true
-
-    -- Manual formatting
-    bufmap(bufnr, "<leader>F", function()
-      vim.lsp.buf.format({
-        bufnr = bufnr,
-        async = true,
-        filter = function(c)
-          return c.name == "null-ls" or c.name == client.name
-        end,
-      })
-      vim.notify("Formatted buffer with " .. client.name, vim.log.levels.INFO)
-    end, "Format buffer manually")
-
-    -- Toggle autoformat
-    bufmap(bufnr, "<leader>tf", function()
-      vim.b[bufnr].format_enabled = not vim.b[bufnr].format_enabled
-      vim.notify("Format on save: " ..
-        (vim.b[bufnr].format_enabled and "ENABLED ✅" or "DISABLED ⛔"))
-    end, "Toggle Format on Save")
-
-    -- Autoformat before save
-    local group = vim.api.nvim_create_augroup("LspFormat." .. bufnr, { clear = true })
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = group,
-      buffer = bufnr,
-      callback = function()
-        if vim.b[bufnr].format_enabled then
-          vim.lsp.buf.format({ bufnr = bufnr, async = false })
-        end
-      end,
-      desc = "Autoformat before save",
-    })
+  -- Apply client-specific overrides if defined
+  if client_specific[client.name] then
+    client_specific[client.name](client, bufnr)
   end
 
-  -- ╭───────────────────────╮
-  -- │ ✨ Document Highlight │
-  -- ╰───────────────────────╯
+  -- Example: keymaps for core LSP functions (expand as you like)
+  bufmap(bufnr, "K", vim.lsp.buf.hover, "LSP Hover")
+  bufmap(bufnr, "gd", vim.lsp.buf.definition, "Goto Definition")
+  bufmap(bufnr, "gr", vim.lsp.buf.references, "Goto References")
+  bufmap(bufnr, "<leader>rn", vim.lsp.buf.rename, "Rename Symbol")
+  bufmap(bufnr, "<leader>ca", vim.lsp.buf.code_action, "Code Action")
+
+  -- Document highlights
   if client.server_capabilities.documentHighlightProvider then
     local hl_grp = vim.api.nvim_create_augroup("lsp_document_highlight_" .. bufnr, { clear = true })
     vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
@@ -152,9 +106,12 @@ end
 -- │ Statusline integration       │
 -- ╰──────────────────────────────╯
 function M.format_status()
-  if vim.b.format_enabled == nil then return "" end
-  return vim.b.format_enabled and " fmt:on" or " fmt:off"
+  local ok, fmt = pcall(require, "plugins.lsp.null-ls-format")
+  if ok and fmt.is_enabled() then
+    return "fmt:on"
+  else
+    return "fmt:off"
+  end
 end
 
 return M
-
