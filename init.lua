@@ -91,7 +91,7 @@ require('lazy').setup({
     -- require("plugins.debug"),
     -- require("plugins.lint"),
     require("plugins.gitsigns"),
-    require("plugins.null-ls"),
+    require("plugins.none-ls"),
     require("plugins.indent_line"),
     require("plugins.autocompletion"),
     require("plugins.alpha"),
