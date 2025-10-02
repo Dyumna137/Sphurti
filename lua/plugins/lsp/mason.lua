@@ -1,63 +1,69 @@
--- plugins/lsp/mason.lua
---[[
-### 2. **`mason.lua`** — Installing and managing language servers
+--[[============================================================================
+# 📄 `mason.lua` — Installing and Managing Language Servers
 
-**Purpose:**  
-Automatically installs, manages, and keeps track of **LSP servers, linters, and formatters**.  
-Think of Mason as a **package manager for LSP tools**.
+## 🧩 Purpose
+Automatically install and manage **LSP servers, linters, and formatters**.
+Think of Mason as a **package manager for Neovim LSP tools**.
 
-**Responsibilities:**
-1. Install and configure LSP servers (e.g., `pyright`, `lua_ls`, `tsserver`).
+## 🎯 Responsibilities
+1. Install and configure LSP servers (pyright, lua_ls, clangd, etc.).
 2. Install additional tools like formatters and linters via `mason-tool-installer`.
 3. Connect installed servers to Neovim via `mason-lspconfig`.
-4. Ensure `on_attach` runs for servers that may not be managed by Mason (e.g., `jdtls`, typescript-tools).
+4. Ensure `on_attach` is run for clients not managed by Mason (jdtls, dartls, etc.).
 
-**Benefits:**
-- Eliminates manual installation of language servers.
-- Ensures consistent LSP setup across machines.
-- Centralizes all LSP server management in one file.
+## 💡 Design Decisions
+- Centralized management: all LSP servers and tools defined here.
+- Merge `on_attach` and capabilities automatically into server configs.
+- Allow per-server custom settings (e.g., lua_ls workspace, clangd custom config).
+- Auto-install missing servers to avoid manual setup.
+- Separation: Mason only handles installation, server setup delegated to LspAttach.
 
-**Future Improvements:**
-- Add version pinning for reproducibility.
-- Auto-update servers or tools on startup.
-- Allow conditional server installation based on project type.
-- Integrate pre- and post-install hooks for custom setup.
-]]
+## 🚀 How to Use
+1. Place this file under `lua/plugins/lsp/mason.lua`.
+2. Include it in `lsp.lua` using `require("plugins.lsp.mason")`.
+3. Define your servers and tools in `servers` and `extra_tools`.
+4. Mason will auto-install and configure them with `on_attach` and capabilities.
 
--- Mason base setup (UI, registry, paths)
+============================================================================
+--]]
+
+-- ╭─────────────────────────────────╮
+-- │ Base Mason Setup                │
+-- ╰─────────────────────────────────╯
+-- Purpose: initialize Mason UI, registry, paths for server management
+-- Responsibilities: provides Mason API for installing and managing LSP tools
 require("mason").setup()
 require("mason-lspconfig").setup()
 
+-- Attach function for when LSP client attaches to a buffer
 local on_attach = require("plugins.lsp.on_attach").on_attach
 
--- NOTE: Blink.cmp's get_lsp_capabilities function includes the built-in LSP capabilities by default.
--- To merge with your own capabilities, use the first argument, which acts as an override.
+-- ╭────────────────────────────────────╮
+-- │ Default LSP Capabilities           │
+-- ╰────────────────────────────────────╯
+-- Purpose: define capabilities that LSP servers support (completion, folding, etc.)
+-- Design: Merge blink.cmp capabilities for autocompletion + foldingRange support
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = vim.tbl_deep_extend("force", capabilities, require("blink.cmp").get_lsp_capabilities({}, false))
+capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
--- Add folding support to all servers
-capabilities = vim.tbl_deep_extend("force", capabilities, {
-  textDocument = {
-    foldingRange = {
-      dynamicRegistration = false,
-      lineFoldingOnly = true,
-    },
-  },
-})
+local lspconfig = require("lspconfig")
 
--- 🔍 Helper: find project root by walking upward until a `.git` folder is found
+-- ╭──────────────────────────────╮
+-- │ Project Root Helper          │
+-- ╰──────────────────────────────╯
+-- Purpose: Determine project root by searching for .git folder
+-- Responsibilities: Used by servers that need a root directory
 local function get_root_dir(startpath)
   local git_dir = vim.fs.find("*.git", { upward = true, path = startpath })[1]
   return vim.fs.dirname(git_dir) or vim.fs.dirname(startpath)
 end
---[[
-✅ This works like `util.find_git_ancestor()` (now deprecated).
-It finds the `.git` folder; if not found, falls back to the file’s dir.
---]]
 
-local lspconfig = require("lspconfig")
-
--- 🛠️ Define all LSP servers with optional custom settings
+-- ╭──────────────────────────────────────╮
+-- │ Define LSP Servers                   │
+-- ╰──────────────────────────────────────╯
+-- Purpose: List all LSP servers and their custom settings
+-- Design: Servers can override on_attach, capabilities, root_dir, or settings
 local servers = {
   lua_ls = {
     settings = {
@@ -73,7 +79,7 @@ local servers = {
         completion = { callSnippet = "Replace" },
         telemetry = { enable = false },
         diagnostics = {
-          globals = { "vim" }, -- Tell the server about global `vim`
+          globals = { "vim" },
           disable = { "missing-fields" },
         },
       },
@@ -81,15 +87,14 @@ local servers = {
     root_dir = get_root_dir,
   },
 
-  -- Ruff: Python linter/formatter
-  ruff = {
+  ruff = {  -- Python linter/formatter
     commands = {
       RuffAutofix = {
         function()
           vim.lsp.buf_request(0, "workspace/executeCommand", {
             command = "ruff.applyAutofix",
             arguments = { { uri = vim.uri_from_bufnr(0) } },
-          }, function(_, _, _, _) end)
+          })
         end,
         description = "Ruff: Fix all auto-fixable problems",
       },
@@ -98,66 +103,66 @@ local servers = {
           vim.lsp.buf_request(0, "workspace/executeCommand", {
             command = "ruff.applyOrganizeImports",
             arguments = { { uri = vim.uri_from_bufnr(0) } },
-          }, function(_, _, _, _) end)
+          })
         end,
         description = "Ruff: Format imports",
       },
     },
   },
 
-  pyright = {},                             -- Python type checker
-  clangd = require("plugins.lsp.ft.clang"), -- C/C++ server with custom config
+  pyright = {},
+  clangd = require("plugins.lsp.ft.clang"),
   jsonls = {},
   sqls = {},
-  yamlls = {},   -- YAML LSP (GitHub Actions, Kubernetes configs, etc.)
-  bashls = {},   -- Bash LSP
-  marksman = {}, -- Markdown LSP
+  yamlls = {},
+  bashls = {},
+  marksman = {},
 }
 
--- 🧹 Non-LSP tools (formatters, linters) to install via mason-tool-installer
-local extra_tools = {
-  "stylua",       -- Lua formatter
-  "clang-format", -- C/C++ formatter
-  "markdownlint", -- Markdown linter
-  -- Add others like prettier, eslint_d, black, etc.
-}
+-- ╭──────────────────────────────────────╮
+-- │ Extra Tools (formatters, linters)    │
+-- ╰──────────────────────────────────────╯
+-- Purpose: Define non-LSP tools to install (formatters, linters)
+local extra_tools = { "stylua", "clang-format", "markdownlint" }
 
--- 📌 Autocommands for filetype-specific setups (e.g. Java)
--- vim.api.nvim_create_autocmd("FileType", {
---   pattern = { "java" },
---   callback = function()
---     require("plugins.lsp.ft.java").setup()
---   end,
--- })
-
--- 🧩 Combine LSP servers and tools into one install list
+-- ╭──────────────────────────────────────╮
+-- │ Combine All Tools for Installation   │
+-- ╰──────────────────────────────────────╯
+-- Purpose: Ensure everything is installed automatically
 local ensure_installed = vim.tbl_keys(servers)
 vim.list_extend(ensure_installed, extra_tools)
 
--- 🔄 Ensure everything is installed
+-- ╭──────────────────────────────────────╮
+-- │ Mason-Tool-Installer Setup           │
+-- ╰──────────────────────────────────────╯
+-- Purpose: auto-install all servers and tools defined above
 require("mason-tool-installer").setup({
   ensure_installed = ensure_installed,
 })
 
--- 🚀 Setup each LSP server with merged config
+-- ╭──────────────────────────────────────╮
+-- │ Setup Each LSP Server                │
+-- ╰──────────────────────────────────────╯
+-- Responsibilities:
+--   1. Setup LSP servers with default and custom settings
+--   2. Attach on_attach and capabilities automatically
 require("mason-lspconfig").setup({
   ensure_installed = vim.tbl_keys(servers),
   automatic_enable = true,
   handlers = {
     function(server_name)
       local server_opts = servers[server_name] or {}
-
-      -- Merge on_attach and capabilities into each server config
-      server_opts.on_attach = server_opts.on_attach or on_attach or function() end
-      server_opts.capabilities = vim.tbl_extend("force", capabilities or {}, server_opts.capabilities or {})
-
+      server_opts.on_attach = server_opts.on_attach or on_attach
+      server_opts.capabilities = vim.tbl_extend("force", capabilities, server_opts.capabilities or {})
       lspconfig[server_name].setup(server_opts)
     end,
   },
 })
 
--- 🛡️ Safety net: run on_attach for *any* LSP that attaches,
--- even those not managed by mason-lspconfig (like jdtls, dartls, etc.)
+-- ╭──────────────────────────────────────╮
+-- │ Safety Net for Non-Mason Clients     │
+-- ╰──────────────────────────────────────╯
+-- Purpose: Run on_attach for any LSP client that Mason didn't manage (e.g., jdtls)
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
@@ -167,3 +172,4 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end
   end,
 })
+
