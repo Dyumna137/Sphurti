@@ -1,49 +1,54 @@
---[[
-### **`lsp.lua`** — Central LSP orchestration
+--[[============================================================================
+#  `lsp.lua` — Central LSP Orchestration for Neovim
 
-**Purpose:**
-Acts as the **central entry point** for all LSP-related configuration in Neovim.
-Orchestrates server setup, diagnostics, buffer-local behavior, and integration with optional plugins.
+##  Purpose
+Acts as the **central entry point** for all LSP-related configuration.
+It orchestrates:
+- Global diagnostics setup
+- LSP server installation and configuration
+- Buffer-local behavior delegation
+- Optional plugin integration (status, completion, etc.)
 
-**Responsibilities:**
-1. Load Mason and ensure required servers are installed.
-2. Configure **global diagnostic behavior** (`vim.diagnostic.config`) for all buffers.
-3. Create an `LspAttach` autocmd:
-   - Calls `on_attach.lua` to set buffer-local keymaps and behavior.
-   - Sets up **document highlights**.
-   - Enables **autoformat-on-save** for clients supporting formatting.
-4. Optionally integrate plugins like `fidget.nvim`, `lspsaga.nvim`, or `trouble.nvim`.
-5. Serve as a central place to add **future LSP enhancements**, like custom per-client behavior or auto-completion hooks.
+This file ensures modularity: all buffer-local details are delegated to
+`on_attach.lua`, while Mason handles installation.
 
-**Key Points:**
-- Diagnostics configuration is **global**, runs once at startup.
-- Buffer-local behavior is delegated to `on_attach`.
-- Completion (nvim-cmp) can be added in a separate module (`autocompletion.lua`) to keep concerns separated.
-- Centralized orchestration ensures modularity, maintainability, and future scalability.
+##  Responsibilities
+1. Configure global diagnostics for all buffers.
+2. Load Mason and ensure required LSP servers, formatters, and linters are installed.
+3. Set up LspAttach autocmd to call `on_attach` for buffer-local behaviors.
+4. Optionally integrate plugins like `fidget.nvim` or `nvim-cmp`.
+5. Provide a single place to extend LSP behavior or capabilities.
 
-**Future Improvements:**
-- Integrate nvim-cmp or other completion engines here via a separate module.
-- Add per-client customizations (e.g., `clangd` specific keymaps).
-- Support which-key groups for organized LSP keymaps.
-- Add logging or debugging hooks for LSP attach/detach events.
-- Add lazy-loading mechanisms for LSP plugins and servers.
-]]
+##  Design Decisions
+- Diagnostics are global; buffer-local features are in `on_attach.lua`.
+- Avoid duplication: highlights and formatting only set per buffer.
+- Lazy load plugins by filetype or event to improve startup time.
+- Maintain clean separation of concerns for future scalability.
 
+##  How to Use
+1. Place this file under `lua/plugins/lsp/lsp.lua`.
+2. Include it in your plugin manager (LazyVim, Packer, etc.).
+3. Mason will auto-install servers and formatters defined in `mason.lua`.
+4. `on_attach.lua` handles all buffer-local keymaps, formatting, and highlights.
+5. Optional: integrate `null-ls` separately for formatters/linters.
+
+============================================================================
+--]]
 
 return {
-  { -- Main LSP Configuration
+  { 
     "neovim/nvim-lspconfig",
     event = "BufReadPre",
     dependencies = {
-      { "saghen/blink.cmp" },
+      "saghen/blink.cmp",  -- Enhances capabilities for cmp
 
-      -- Mason: only load when you need to install servers
-      { "williamboman/mason.nvim",                  cmd = { "Mason", "MasonInstall" }, opts = {} },
-      { "williamboman/mason-lspconfig.nvim" },
-      { "WhoIsSethDaniel/mason-tool-installer.nvim" },
+      -- Mason: Install servers, formatters, linters
+      { "williamboman/mason.nvim", cmd = { "Mason", "MasonInstall" }, opts = {} },
+      "williamboman/mason-lspconfig.nvim",
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
 
-      -- Status updates for LSP
-      { "j-hui/fidget.nvim",                        event = "LspAttach",               opts = {} },
+      -- Status updates for LSP progress
+      { "j-hui/fidget.nvim", event = "LspAttach", opts = {} },
 
       -- Autocompletion
       {
@@ -59,48 +64,28 @@ return {
         },
       },
 
-      -- Java LSP
+      -- Java LSP (lazy load)
       { "mfussenegger/nvim-jdtls", ft = "java" },
 
-      -- Lazy load only for Lua files
-      {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-          },
-        },
-      },
+      -- Lua dev library
+      { "folke/lazydev.nvim", ft = "lua", opts = { library = { { path = "${3rd}/luv/library", words = { "vim%.uv" } } } } },
     },
-
-
     config = function()
       -- ╭──────────────────────────────────────╮
       -- │  Global Diagnostics Configuration    │
       -- ╰──────────────────────────────────────╯
-      -- Diagnostic config (single call, merging signs floating and other settings)
+      -- Purpose: Set how diagnostics are displayed in all buffers.
+      -- Responsibilities: Floating windows, gutter signs, severity sorting.
+      -- Design Decisions: Virtual text disabled, real-time update in insert mode.
       vim.diagnostic.config({
-        virtual_text = false, -- disable inline virtual text
-        float = {
-          border = "rounded", --  Rounded border
-          source = true,      -- show source like [clangd]
-          header = "",        -- show source like [clangd]
-          prefix = "",        -- Optional: no bullet points
-        },
-        underline = {
-          severity = {
-            min = vim.diagnostic.severity.WARN, -- underline WARN and ERROR only
-          },
-        },
-        update_in_insert = true, -- real-time diagnostics
+        virtual_text = false,
+        float = { border = "rounded", source = true, header = "", prefix = "" },
+        underline = { severity = { min = vim.diagnostic.severity.WARN } },
+        update_in_insert = true,
         severity_sort = true,
-        signs = {                -- enable signs in gutter
+        signs = {
           active = true,
-          severity = {
-            min = vim.diagnostic.severity.HINT,
-            max = vim.diagnostic.severity.ERROR,
-          },
+          severity = { min = vim.diagnostic.severity.HINT, max = vim.diagnostic.severity.ERROR },
           icons = {
             [vim.diagnostic.severity.ERROR] = "",
             [vim.diagnostic.severity.WARN]  = "",
@@ -109,132 +94,56 @@ return {
           },
         },
       })
-      -- For python formatting
 
-      -- ╭─────────────────────────────────╮
-      -- │ Load Mason (server installer)   │
-      -- ╰─────────────────────────────────╯
+      -- ╭──────────────────────────────────────╮
+      -- │  Load Mason and install LSP servers  │
+      -- ╰──────────────────────────────────────╯
+      -- Purpose: Ensure all required servers, formatters, and linters are installed.
+      -- Responsibilities: Install missing tools and configure servers.
+      -- Design Decisions: Centralized installation, lazy-loading for efficiency.
+      require("plugins.lsp.mason") 
 
+      -- ╭──────────────────────────────────────╮
+      -- │  Setup null-ls (none-ls)             │
+      -- ╰──────────────────────────────────────╯
+      -- local status_ok, null_ls = pcall(require, "plugins.none-ls")
+      -- if status_ok then
+      --     null_ls.config()  -- Calls the M.config() function in none-ls.lua or none_ls.setup(on_attach, capabilities) if you pass params
+      -- else
+      --     vim.notify("none-ls plugin not found", vim.log.levels.WARN)
+      -- end
 
-      require("plugins.lsp.mason") -- Setup Mason and install servers
-      -- require("plugins.lsp.servers")  -- Configure and start language servers -- WARN: Remember here i donot include server for lsp configurations
+      local on_attach = require("plugins.lsp.on_attach").on_attach
 
+      -- Merge default capabilities with cmp capabilities
+      local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities = vim.tbl_deep_extend("force", capabilities, require("blink.cmp").get_lsp_capabilities({}, false))
+      capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
-      local has_nvim_011 = vim.fn.has("nvim-0.11") == 1
-      ---@param client vim.lsp.Client
-      ---@param method vim.lsp.protocol.Method
-      ---@param bufnr? integer
-      ---@return boolean
-      local function client_supports_method(client, method, bufnr)
-        if type(client) ~= "table" or (not client.supports_method and not client["supports_method"]) then
-          vim.schedule(function()
-            vim.notify("Invalid LSP client passed to client_supports_method", vim.log.levels.WARN)
-          end)
-          return false
-        end
+      local lspconfig = require("lspconfig")
 
-        if has_nvim_011 then
-          -- Newer Neovim supports method call
-          if bufnr then
-            -- If buf-specific check is needed and supported
-            -- (this depends on the LSP client impl, so safe fallback below)
-            local ok, result = pcall(client.supports_method, client, method, bufnr)
-            if ok and type(result) == "boolean" then
-              return result
-            end
-          end
-          -- Fallback: call without bufnr
-          return client:supports_method(method)
-        else
-          -- Older Neovim: pass client explicitly, no bufnr param expected
-          return client.supports_method(client, method)
-        end
-      end
-
-      -- NOTE: Should diagnostic config be inside LspAttach?
-      --
-      -- No, mostly not.
-      -- The vim.diagnostic.config() call applies globally — it sets how diagnostics behave across all buffers and all LSP clients.
-      -- This means it should run once on startup, not inside an LspAttach autocmd that triggers every time an LSP client attaches to a buffer.
-
-      -- On LSP attach, configure keymaps and behaviors
-      vim.api.nvim_create_autocmd('LspAttach', {
-        group = vim.api.nvim_create_augroup('user-lsp-attach', { clear = true }),
+      -- ╭──────────────────────────────────────╮
+      -- │  LspAttach autocmd                   │
+      -- ╰──────────────────────────────────────╯
+      -- Purpose: Run `on_attach` for every buffer that attaches to any LSP client.
+      -- Responsibilities: Set buffer-local keymaps, highlights, and formatting toggle.
+      -- Design Decisions: Avoid duplicating code, delegate all buffer-local logic to `on_attach`.
+      vim.api.nvim_create_autocmd("LspAttach", {
+        group = vim.api.nvim_create_augroup("user-lsp-attach", { clear = true }),
         callback = function(event)
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if not client then
-            -- print("No client found on attach")
-            return -- client is nil, so do nothing
-            --[[
-              event.data.client_id always exists in LspAttach event.
-              Use vim.lsp.get_client_by_id to get the client object.
-              If that returns nil, bail early.
-              Then safely access server_capabilities and documentFormattingProvider.
-            --]]
+          if client then
+            local bufnr = event.buf 
+            if client.name == "null-ls" then
+                vim.notify("null-ls attached to buffer " .. bufnr)
+            end
+            on_attach(client, bufnr)
           end
-          local bufnr = event.buf
-
-
-          -- Delegate keymaps and buffer-local behaviors to on_attach.lua
-          require("plugins.lsp.on_attach").on_attach(client, bufnr)
-          --
-          -- NOTE:        What should go inside LspAttach?
-          --
-          -- Buffer-local keymaps for LSP functions (go-to-def, hover, rename, code actions, etc.).
-          -- Any client- or buffer-specific behavior that must happen per LSP attach.
-          -- Per-client capability checks like client_supports_method.
-          -- cmp dono got under LspAttach cause cm work individaully yes it takes helps from LSPs for that it's has no need to attach.
-          -- ╭───────────────────────────╮
-          -- │ Core LSP actions          │
-          -- ╰───────────────────────────╯
-          -- it's empty for now if want anything to attacah you can
-          -- ╭───────────────────────────────────────────╮
-          -- │ Future Improvements You Can Add Here      │
-          -- ╰───────────────────────────────────────────╯
-
-          -- NOTE: I remove autoformatting on save using null-ls cause now i have a file of nul-ls.lua.
-
-          -- ╭───────────────────────────────╮
-          -- │AUTOCOMPLETION (nvim-cmp)      │
-          -- ╰───────────────────────────────╯
-          -- a better completion is there in autocompletion.lua under lua\plugins folder,
-
-
-          -- ╭───────────────────────────╮
-          -- │Document Highlight         │
-          -- ╰───────────────────────────╯
-          -- Document Highlight if supported
-          -- local client = vim.lsp.get_client_by_id(event.data.client_id) -- already defined ` local client ` at 209 line
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-            local hl_group = vim.api.nvim_create_augroup("lsp-highlight", { clear = false }) -- vim.api lets you interact with Neovim — like manipulating buffers, windows, or getting/setting options — through Lua scripts.
-
-            vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-              group = hl_group,
-              buffer = event.buf,
-              callback = vim.lsp.buf.document_highlight,
-            })
-
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-              group = hl_group,
-              buffer = event.buf,
-              callback = vim.lsp.buf.clear_references,
-            })
-
-            vim.api.nvim_create_autocmd("LspDetach", {
-              group = vim.api.nvim_create_augroup("lsp-highlight-detach", { clear = true }),
-              callback = function(event2)
-                vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds({ group = hl_group, buffer = event2.buf })
-              end,
-            })
-          end
-          -- 🔧 Disable underline for LSP highlights
-          vim.api.nvim_set_hl(0, "LspReferenceText", { underline = false, bg = "#3c3836" })
-          vim.api.nvim_set_hl(0, "LspReferenceRead", { underline = false, bg = "#3c3836" })
-          vim.api.nvim_set_hl(0, "LspReferenceWrite", { underline = false, bg = "#3c3836" })
         end,
       })
     end,
   },
-
+  -- Lazy.nvim will load none-ls automatically
+  -- { "plugins.none-ls" },
 }
+
