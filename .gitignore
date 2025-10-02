@@ -33,5 +33,6 @@ Thumbs.db
 # Ignore environment config files (if any)
 .env
 
-# Ignore some folders 
+# Ignore some folders or files
 tests/
+lazy-lock.json
