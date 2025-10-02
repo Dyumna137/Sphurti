@@ -33,7 +33,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- 🔒 Prevent native LSP completion popup for a specific filetype
+--  Prevent native LSP completion popup for a specific filetype
 -- vim.api.nvim_create_autocmd("FileType", {
 --   pattern = "markdown",
 --   callback = function()
@@ -86,12 +86,12 @@ require('lazy').setup({
     require("plugins.lualine"),
     require("plugins.treesitter"),
     require("plugins.telescope"),
+    require("plugins.none-ls"),  -- Lazy will receive the plugin spec table  
     require("plugins.lsp"),
     require("plugins.autopairs"),
     -- require("plugins.debug"),
     -- require("plugins.lint"),
     require("plugins.gitsigns"),
-    require("plugins.none-ls"),
     require("plugins.indent_line"),
     require("plugins.autocompletion"),
     require("plugins.alpha"),
@@ -103,4 +103,25 @@ require('lazy').setup({
     -- require("plugins.glow"),
     require("plugins.sqlua"),
     checker = { enabled = true },
+  },
+  {
+    ui = {
+      -- If you have a Nerd Font, set icons to an empty table which will use the
+      -- default lazy.nvim defined Nerd Font icons otherwise define a unicode icons table
+      icons = vim.g.have_nerd_font and {} or {
+        cmd = '⌘',
+        config = '🛠',
+        event = '📅',
+        ft = '📂',
+        init = '⚙',
+        keys = '🗝',
+        plugin = '🔌',
+        runtime = '💻',
+        require = '🌙',
+        source = '📄',
+        start = '🚀',
+        task = '📌',
+        lazy = '💤 ',
+      },
+    },
   })
