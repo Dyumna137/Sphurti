@@ -282,22 +282,8 @@ function M.config()
     },
   })
 
-  -- ╭────────────────────────────────────╮
-  -- │ Safety Net: Universal LspAttach    │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Ensure non-Mason managed servers (e.g., jdtls, dartls) still run on_attach.
-  -- Responsibilities:
-  --   • Listen for any LspAttach event and idempotently call the shared on_attach.
-  vim.api.nvim_create_autocmd("LspAttach", {
-    desc = "Apply universal on_attach to all LSP clients (fallback)",
-    callback = function(args)
-      local client = vim.lsp.get_client_by_id(args.data.client_id)
-      if not client then
-        return
-      end
-      pcall(on_attach, client, args.buf)
-    end,
-  })
+  -- NOTE: LspAttach autocmd is handled in lua/plugins/lsp.lua
+  -- No need for duplicate handler here - on_attach is already called via lsp.lua
 end -- end M.config
 
 -- ╭────────────────────────────────────╮

@@ -99,7 +99,9 @@ opt.fillchars = { eob = " " } -- Hide ~ for empty lines
 -- Clear the screen when Neovim exits (Windows only)
 if vim.fn.has("win32") == 1 then
   vim.api.nvim_create_autocmd("VimLeave", {
+    group = vim.api.nvim_create_augroup("clear-screen-on-exit", { clear = true }),
     command = "silent !cls",
+    desc = "Clear terminal screen on exit",
   })
 end
 
