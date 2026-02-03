@@ -96,6 +96,9 @@ end
 opt.laststatus = 3   -- Global statusline (Neovim 0.7+)
 opt.fillchars = { eob = " " } -- Hide ~ for empty lines
 
+-- C/C++ compiler error format (GCC/ARM-GCC/Clang)
+opt.errorformat:append('%f:%l:%m')
+
 -- Clear the screen when Neovim exits (Windows only)
 if vim.fn.has("win32") == 1 then
   vim.api.nvim_create_autocmd("VimLeave", {

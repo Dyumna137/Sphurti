@@ -65,10 +65,6 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
 	-- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
 	{
-		"tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
-		event = "VeryLazy",
-	},
-	{
 		"famiu/bufdelete.nvim",
 		cmd = "Bdelete",
 	},
@@ -87,9 +83,9 @@ require("lazy").setup({
 	require("plugins.gitsigns"),
 	require("plugins.indent_line"),
 	require("plugins.autocompletion"),
-	require("plugins.alpha"),
+	-- require("plugins.alpha"),    -- Dashboard (removed: ~200KB, rarely used)
 	require("plugins.misc"),
-	require("plugins.database"),
+	-- require("plugins.database"), -- SQL tools (removed: ~300KB, use when needed)
 	require("plugins.trouble"),
 	require("plugins.live-preview"),
 	require("plugins.lsp_signature"),
