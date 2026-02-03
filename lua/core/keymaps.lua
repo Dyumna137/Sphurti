@@ -29,14 +29,14 @@ keymap("n", "<C-u>", "<C-u>zz", opts)                          -- Scroll up and 
 -- ╭───────────────────────────╮
 -- │ SPLIT / WINDOW MANAGEMENT │
 -- ╰───────────────────────────╯
-keymap("n", "<leader>vv", "<C-w>v", { desc = "Split vertical" })
-keymap("n", "<leader>hh", "<C-w>s", { desc = "Split horizontal" })
-keymap("n", "<leader>se", "<C-w>=", { desc = "Equalize splits" })
-keymap("n", "<leader>xs", ":close<CR>", { desc = "Close split" })
-keymap("n", "<C-h>", "<C-w>h", { desc = "Focus left window" })
-keymap("n", "<C-j>", "<C-w>j", { desc = "Focus bottom window" })
-keymap("n", "<C-k>", "<C-w>k", { desc = "Focus top window" })
-keymap("n", "<C-l>", "<C-w>l", { desc = "Focus right window" })
+keymap("n", "<leader>vv", "<C-w>v", { noremap = true, desc = "Split vertical" })
+keymap("n", "<leader>hh", "<C-w>s", { noremap = true, desc = "Split horizontal" })
+keymap("n", "<leader>se", "<C-w>=", { noremap = true, desc = "Equalize splits" })
+keymap("n", "<leader>xs", ":close<CR>", { noremap = true, desc = "Close split" })
+keymap("n", "<C-h>", "<C-w>h", { noremap = true, desc = "Focus left window" })
+keymap("n", "<C-j>", "<C-w>j", { noremap = true, desc = "Focus bottom window" })
+keymap("n", "<C-k>", "<C-w>k", { noremap = true, desc = "Focus top window" })
+keymap("n", "<C-l>", "<C-w>l", { noremap = true, desc = "Focus right window" })
 
 -- ╭───────────────────────────╮
 -- │ RESIZE SPLITS             │
@@ -56,7 +56,7 @@ keymap("n", "<leader>tp", ":tabp<CR>", opts)                          -- Previou
 keymap("n", "<Tab>", ":bnext<CR>", opts)                              -- Next buffer
 keymap("n", "<S-Tab>", ":bprevious<CR>", opts)                        -- Previous buffer
 keymap("n", "<leader>sb", ":buffers<CR>:buffer ", { noremap = true }) -- Buffer list + select
--- keymap("n", "<leader>x", ":Bdelete<CR>", opts)                        -- Close buffer -- NOTE: i can't still finding good keymap for closing buffer
+keymap("n", "<leader>bd", ":Bdelete<CR>", opts)                       -- Close buffer (delete)
 keymap("n", "<leader>bn", ":enew<CR>", opts)                          -- New buffer
 
 -- ╭───────────────────────────╮
@@ -65,12 +65,6 @@ keymap("n", "<leader>bn", ":enew<CR>", opts)                          -- New buf
 keymap("n", "<leader>+", "<C-a>", opts)            -- Increment number
 keymap("n", "<leader>-", "<C-x>", opts)            -- Decrement number
 keymap("n", "<leader>tw", ":set wrap!<CR>", opts)  -- Toggle line wrapping
-
--- ╭───────────────────────────╮
--- │ INSERT MODE EXIT          │
--- ╰───────────────────────────╯
--- keymap("i", "jk", "<ESC>", opts) -- Exit insert with jk
--- keymap("i", "kj", "<ESC>", opts) -- Exit insert with kj
 
 -- ╭────────────────────────────╮
 -- │ VISUAL MODE BEHAVIOR       │
@@ -103,7 +97,7 @@ keymap("n", "<leader>bc", function()
       vim.cmd("bdelete " .. buf.bufnr)
     end
   end
-end, { desc = "Clean hidden buffers" })
+end, { noremap = true, desc = "Clean hidden buffers" })
 
 -- LSP format and diagnostics are handled in plugins/lsp/on_attach.lua
 
@@ -129,23 +123,31 @@ end
 -- ═══════════════════════════════════════════════════════════════════
 -- Build System Integration (C/C++/Embedded)
 -- ═══════════════════════════════════════════════════════════════════
-vim.keymap.set('n', '<leader>mm', ':!make<CR>', { desc = 'Make: Build' })
-vim.keymap.set('n', '<leader>mc', ':!make clean<CR>', { desc = 'Make: Clean' })
-vim.keymap.set('n', '<leader>mr', ':!make run<CR>', { desc = 'Make: Run' })
-vim.keymap.set('n', '<leader>mt', ':!make test<CR>', { desc = 'Make: Test' })
+keymap('n', '<leader>mm', ':make<CR>', { noremap = true, desc = 'Make: Build (async)' })
+keymap('n', '<leader>mc', ':make clean<CR>', { noremap = true, desc = 'Make: Clean' })
+keymap('n', '<leader>mr', ':make run<CR>', { noremap = true, desc = 'Make: Run' })
+keymap('n', '<leader>mt', ':make test<CR>', { noremap = true, desc = 'Make: Test' })
 
 -- Quickfix navigation (for build errors)
-vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = 'Quickfix: Open' })
-vim.keymap.set('n', '<leader>qc', ':cclose<CR>', { desc = 'Quickfix: Close' })
-vim.keymap.set('n', '[q', ':cprev<CR>', { desc = 'Quickfix: Previous' })
-vim.keymap.set('n', ']q', ':cnext<CR>', { desc = 'Quickfix: Next' })
+keymap('n', '<leader>qo', ':copen<CR>', { noremap = true, silent = true, desc = 'Quickfix: Open' })
+keymap('n', '<leader>qc', ':cclose<CR>', { noremap = true, silent = true, desc = 'Quickfix: Close' })
+keymap('n', '[q', ':cprev<CR>', { noremap = true, silent = true, desc = 'Quickfix: Previous' })
+keymap('n', ']q', ':cnext<CR>', { noremap = true, silent = true, desc = 'Quickfix: Next' })
 
 -- C/C++ specific (clangd built-in commands)
-vim.keymap.set('n', '<leader>ch', '<cmd>ClangdSwitchSourceHeader<CR>', { desc = 'C++: Switch Header/Source' })
+keymap('n', '<leader>ch', '<cmd>ClangdSwitchSourceHeader<CR>', { noremap = true, desc = 'C++: Switch Header/Source' })
 
 -- ═══════════════════════════════════════════════════════════════════
 -- Note-taking Workflow
 -- ═══════════════════════════════════════════════════════════════════
-vim.keymap.set('n', '<leader>nd', 'i<C-R>=strftime("%Y-%m-%d")<CR><Esc>', { desc = 'Note: Insert Date' })
-vim.keymap.set('n', '<leader>nt', 'i<C-R>=strftime("%H:%M")<CR><Esc>', { desc = 'Note: Insert Time' })
-vim.keymap.set('n', '<leader>nn', ':enew | setlocal buftype=nofile bufhidden=wipe noswapfile<CR>', { desc = 'Note: New Scratch' })
+keymap('n', '<leader>nd', function()
+  local date = os.date("%Y-%m-%d")
+  vim.api.nvim_put({date}, 'c', true, true)
+end, { noremap = true, desc = 'Note: Insert Date' })
+
+keymap('n', '<leader>nt', function()
+  local time = os.date("%H:%M")
+  vim.api.nvim_put({time}, 'c', true, true)
+end, { noremap = true, desc = 'Note: Insert Time' })
+
+keymap('n', '<leader>nn', ':enew | setlocal buftype=nofile bufhidden=wipe noswapfile<CR>', { noremap = true, silent = true, desc = 'Note: New Scratch' })

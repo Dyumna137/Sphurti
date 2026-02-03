@@ -104,7 +104,7 @@ end, {
 vim.keymap.set({ "n", "t" }, "<leader>tt", function()
   toggle_terminal(true)
 end, { desc = "Toggle Floating Terminal (file dir)" })
-vim.keymap.set({ "n", "t" }, "<leader>tw", function()
+vim.keymap.set({ "n", "t" }, "<leader>tc", function()
   toggle_terminal(false)
 end, { desc = "Toggle Floating Terminal (cwd)" })
 
