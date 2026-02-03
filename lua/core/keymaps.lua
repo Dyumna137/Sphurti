@@ -10,7 +10,6 @@ local opts = { noremap = true, silent = true }
 -- ╭───────────────────────────╮
 -- │ BASIC MAPPINGS            │
 -- ╰───────────────────────────╯
-keymap({ "n", "v" }, "<Space>", "<Nop>", opts)      -- Disable default <Space> behavior
 keymap("n", "<Esc>", ":noh<CR>", opts)              -- Clear search highlights
 keymap("n", "<C-s>", ":w<CR>", opts)                -- Save file
 keymap("n", "<leader>wf", ":noautocmd w<CR>", opts) -- Save without triggering autocommands
@@ -30,14 +29,14 @@ keymap("n", "<C-u>", "<C-u>zz", opts)                          -- Scroll up and 
 -- ╭───────────────────────────╮
 -- │ SPLIT / WINDOW MANAGEMENT │
 -- ╰───────────────────────────╯
-keymap("n", "<leader>vv", "<C-w>v", opts)                                                                   -- Split window vertically
-keymap("n", "<leader>hh", "<C-w>s", opts)                                                                   -- Split window horizontally
-keymap("n", "<leader>se", "<C-w>=", opts)                                                                   -- Equalize window sizes
-keymap("n", "<leader>xs", ":close<CR>", opts)                                                               -- Close current split
-keymap("n", "<C-h>", "<C-w>h", vim.tbl_extend("force", opts, { desc = "Move focus to the left window" }))   -- Navigate left
-keymap("n", "<C-j>", "<C-w>j", vim.tbl_extend("force", opts, { desc = "Move focus to the bottom window" })) -- Navigate down
-keymap("n", "<C-k>", "<C-w>k", vim.tbl_extend("force", opts, { desc = "Move focus to the top window" }))    -- Navigate up
-keymap("n", "<C-l>", "<C-w>l", vim.tbl_extend("force", opts, { desc = "Move focus to the right window" }))  -- Navigate right
+keymap("n", "<leader>vv", "<C-w>v", { desc = "Split vertical" })
+keymap("n", "<leader>hh", "<C-w>s", { desc = "Split horizontal" })
+keymap("n", "<leader>se", "<C-w>=", { desc = "Equalize splits" })
+keymap("n", "<leader>xs", ":close<CR>", { desc = "Close split" })
+keymap("n", "<C-h>", "<C-w>h", { desc = "Focus left window" })
+keymap("n", "<C-j>", "<C-w>j", { desc = "Focus bottom window" })
+keymap("n", "<C-k>", "<C-w>k", { desc = "Focus top window" })
+keymap("n", "<C-l>", "<C-w>l", { desc = "Focus right window" })
 
 -- ╭───────────────────────────╮
 -- │ RESIZE SPLITS             │
@@ -62,10 +61,10 @@ keymap("n", "<leader>bn", ":enew<CR>", opts)                          -- New buf
 
 -- ╭───────────────────────────╮
 -- │ EDITING SHORTCUTS         │
--- ╰───────────────────────────╯
-keymap("n", "<leader>+", "<C-a>", opts)           -- Increment number
-keymap("n", "<leader>-", "<C-x>", opts)           -- Decrement number
-keymap("n", "<leader>lw", ":set wrap!<CR>", opts) -- Toggle line wrapping
+-- ╰───────────────────────────╮
+keymap("n", "<leader>+", "<C-a>", opts)            -- Increment number
+keymap("n", "<leader>-", "<C-x>", opts)            -- Decrement number
+keymap("n", "<leader>tw", ":set wrap!<CR>", opts)  -- Toggle line wrapping
 
 -- ╭───────────────────────────╮
 -- │ INSERT MODE EXIT          │
@@ -90,8 +89,9 @@ keymap("n", "<leader>Y", '"+Y', opts)          -- Yank line to system clipboard
 -- ╭────────────────────────────╮
 -- │ FILE EXPLORER              │
 -- ╰────────────────────────────╯
--- keymap("n", "<leader>e", ":Lex<CR>", opts)               -- Open file explorer (netrw)
--- keymap("n", "<leader>e", ":Neotree toggle<CR>", opts)
+-- Note: File explorer keymaps are defined in their respective plugin configs
+-- Oil: "-" and "<space>-" in plugins/oil.lua
+-- Neo-tree: can be added if needed
 
 -- ╭────────────────────────────╮
 -- │ OTHERS                     │
@@ -107,16 +107,16 @@ end, { desc = "Clean hidden buffers" })
 
 -- LSP format and diagnostics are handled in plugins/lsp/on_attach.lua
 
--- only when using windows OS
--- Ctrl+B = Visual Block Mode (remapped from Ctrl+V because terminal hijacks it)
-vim.keymap.set("n", "<C-b>", "<C-v>", { noremap = true })
+-- Windows-specific: Ctrl+B = Visual Block Mode (terminal hijacks Ctrl+V)
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+  vim.keymap.set("n", "<C-b>", "<C-v>", { noremap = true })
+end
 
 -- ╭────────────────────────────╮
--- │ OTHERS                     │
+-- │ TRAINING WHEELS REMOVAL    │
 -- ╰────────────────────────────╯
--- Modes: 'n' = normal, 'i' = insert, 'v' = visual
-
--- Disable in normal, insert, and visual modes
+-- Disable arrow keys to enforce hjkl muscle memory
+-- Note: Ctrl+Arrow still works for window resizing
 for _, mode in pairs({ 'n', 'v' }) do
   vim.keymap.set(mode, '<Up>', '<Nop>', { noremap = true, silent = true })
   vim.keymap.set(mode, '<Down>', '<Nop>', { noremap = true, silent = true })
