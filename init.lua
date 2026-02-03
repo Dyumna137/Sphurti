@@ -82,7 +82,7 @@ require("lazy").setup({
 	require("plugins.none-ls"), -- Lazy will receive the plugin spec table
 	require("plugins.lsp"),
 	require("plugins.autopairs"),
-	-- require("plugins.debug"),
+	require("plugins.debug"),
 	-- require("plugins.lint"),
 	require("plugins.gitsigns"),
 	require("plugins.indent_line"),

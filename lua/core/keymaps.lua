@@ -125,3 +125,27 @@ for _, mode in pairs({ 'n', 'v' }) do
 end
 
 -- Telescope keymaps are defined in plugins/telescope.lua
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Build System Integration (C/C++/Embedded)
+-- ═══════════════════════════════════════════════════════════════════
+vim.keymap.set('n', '<leader>mm', ':!make<CR>', { desc = 'Make: Build' })
+vim.keymap.set('n', '<leader>mc', ':!make clean<CR>', { desc = 'Make: Clean' })
+vim.keymap.set('n', '<leader>mr', ':!make run<CR>', { desc = 'Make: Run' })
+vim.keymap.set('n', '<leader>mt', ':!make test<CR>', { desc = 'Make: Test' })
+
+-- Quickfix navigation (for build errors)
+vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = 'Quickfix: Open' })
+vim.keymap.set('n', '<leader>qc', ':cclose<CR>', { desc = 'Quickfix: Close' })
+vim.keymap.set('n', '[q', ':cprev<CR>', { desc = 'Quickfix: Previous' })
+vim.keymap.set('n', ']q', ':cnext<CR>', { desc = 'Quickfix: Next' })
+
+-- C/C++ specific (clangd built-in commands)
+vim.keymap.set('n', '<leader>ch', '<cmd>ClangdSwitchSourceHeader<CR>', { desc = 'C++: Switch Header/Source' })
+
+-- ═══════════════════════════════════════════════════════════════════
+-- Note-taking Workflow
+-- ═══════════════════════════════════════════════════════════════════
+vim.keymap.set('n', '<leader>nd', 'i<C-R>=strftime("%Y-%m-%d")<CR><Esc>', { desc = 'Note: Insert Date' })
+vim.keymap.set('n', '<leader>nt', 'i<C-R>=strftime("%H:%M")<CR><Esc>', { desc = 'Note: Insert Time' })
+vim.keymap.set('n', '<leader>nn', ':enew | setlocal buftype=nofile bufhidden=wipe noswapfile<CR>', { desc = 'Note: New Scratch' })
