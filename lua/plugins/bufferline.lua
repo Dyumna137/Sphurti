@@ -1,10 +1,14 @@
 return {
   'akinsho/bufferline.nvim',
-  event = "VimEnter",
+  event = "VeryLazy",
   version = "*",
   dependencies = {
     'nvim-tree/nvim-web-devicons',
-    'MunifTanjim/nui.nvim',
+  },
+  keys = {
+    { "<leader>bp", "<cmd>BufferLineTogglePin<CR>", desc = "Toggle pin on buffer" },
+    { "<leader>bs", "<cmd>BufferLineSortByExtension<CR>", desc = "Sort buffers by extension" },
+    { "<leader>bd", "<cmd>BufferLineSortByDirectory<CR>", desc = "Sort buffers by directory" },
   },
   config = function()
     local bufferline = require("bufferline")
@@ -178,17 +182,5 @@ return {
         -- when other buffers are moved or sorted
       }
     }
-
-    -- ▼ Keymaps for BufferLine
-    vim.keymap.set("n", "<leader>bp", ":BufferLineTogglePin<CR>",
-      { desc = "Toggle pin on buffer", noremap = true, silent = true })
-    -- vim.keymap.set("n", "<leader>bn", ":BufferLineMoveNext<CR>",
-    -- { desc = "Move buffer right", noremap = true, silent = true })
-    -- vim.keymap.set("n", "<leader>bb", ":BufferLineMovePrev<CR>",
-    -- { desc = "Move buffer left", noremap = true, silent = true })
-    vim.keymap.set("n", "<leader>bs", ":BufferLineSortByExtension<CR>",
-      { desc = "Sort buffers by extension", noremap = true, silent = true })
-    vim.keymap.set("n", "<leader>bd", ":BufferLineSortByDirectory<CR>",
-      { desc = "Sort buffers by directory", noremap = true, silent = true })
   end
 }

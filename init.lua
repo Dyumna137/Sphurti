@@ -9,17 +9,15 @@ vim.loader.enable() -- this caches Lua modules and speeds up startup
 -- :lua print(#vim.tbl_filter(vim.api.nvim_buf_is_loaded, vim.api.nvim_list_bufs()))
 -- :lua vim.diagnostic.open_float(0, { scope = "line", focusable = false }) -- for checking diagnostics
 
-vim.opt.shell = "pwsh"
-vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
-vim.opt.shellquote = ""
-vim.opt.shellxquote = ""
+-- Conditional PowerShell setup (Windows only)
+if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
+	vim.opt.shell = "pwsh"
+	vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command"
+	vim.opt.shellquote = ""
+	vim.opt.shellxquote = ""
+end
 require("core.options")
 require("core.keymaps")
-
---While creating a custom funnction and to made them global
---
---
-require("plugins.floaterminal")
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
@@ -65,14 +63,10 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require("lazy").setup({
-	performance = { -- turn on cache
-		cache = { enabled = true },
-		rtp = { disabled_plugins = { "netrwPlugin" } },
-	},
 	-- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
 	{
 		"tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
-		event = "BufReadPre", -- will load when opening any file
+		event = "VeryLazy",
 	},
 	{
 		"famiu/bufdelete.nvim",
@@ -102,8 +96,43 @@ require("lazy").setup({
 	-- require("plugins.noice"),
 	-- require("plugins.glow"),
 	require("plugins.sqlua"),
-	checker = { enabled = true },
+	-- Floating terminal (custom implementation)
+	{
+		name = "floaterminal",
+		dir = vim.fn.stdpath("config") .. "/lua/plugins",
+		config = function()
+			require("plugins.floaterminal")
+		end,
+		keys = {
+			{ "<leader>tt", desc = "Toggle Floating Terminal (file dir)" },
+			{ "<leader>tw", desc = "Toggle Floating Terminal (cwd)" },
+		},
+		cmd = "Floaterminal",
+	},
 }, {
+	-- Lazy.nvim configuration options
+	defaults = {
+		lazy = true, -- Make all plugins lazy-loaded by default
+	},
+	performance = {
+		cache = { enabled = true },
+		rtp = {
+			disabled_plugins = {
+				"netrwPlugin",
+				"gzip",
+				"zipPlugin",
+				"tarPlugin",
+				"tohtml",
+				"tutor",
+				"matchit",
+				"matchparen",
+			},
+		},
+	},
+	checker = {
+		enabled = true, -- Automatically check for plugin updates
+		notify = false, -- Don't notify on every check
+	},
 	ui = {
 		-- If you have a Nerd Font, set icons to an empty table which will use the
 		-- default lazy.nvim defined Nerd Font icons otherwise define a unicode icons table

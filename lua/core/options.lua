@@ -43,12 +43,13 @@ opt.smartcase = true  -- ...unless capital letters are used
 -- ╭────────────────────────────╮
 -- │ INDENTATION & TABS         │
 -- ╰────────────────────────────╯
+-- NOTE: vim-sleuth auto-detects these per-file, but we set sensible defaults
 opt.autoindent = true  -- Auto-indent new lines
 opt.smartindent = true -- Smart indentation
 opt.breakindent = true -- Keep indentation on wrapped lines
-opt.tabstop = 4        -- A tab is 4 spaces
-opt.shiftwidth = 4     -- Indent by 4 spaces
-opt.softtabstop = 4    -- Backspace deletes 4 spaces
+opt.tabstop = 4        -- Default: a tab is 4 spaces
+opt.shiftwidth = 4     -- Default: indent by 4 spaces
+opt.softtabstop = 4    -- Default: backspace deletes 4 spaces
 opt.expandtab = true   -- Convert tabs to spaces
 
 -- ╭────────────────────────────╮
@@ -60,7 +61,7 @@ opt.splitright = true -- Vertical splits open to the right
 -- ╭────────────────────────────╮
 -- │ WRAPPING & SCROLLING       │
 -- ╰────────────────────────────╯
-opt.wrap = true                         -- Don't wrap long lines
+opt.wrap = true                         -- Wrap long lines
 opt.linebreak = true                    -- Wrap at word boundaries when wrapping
 opt.scrolloff = 4                       -- Minimum lines above/below cursor
 opt.sidescrolloff = 8                   -- Columns to keep left/right of cursor
@@ -83,11 +84,18 @@ vim.opt.textwidth = 0
 -- ╭────────────────────────────╮
 -- │ RUNTIME                    │
 -- ╰────────────────────────────╯
-opt.runtimepath:remove('/usr/share/vim/vimfiles') -- Don't load Vim-specific paths
+-- Remove Vim-specific paths (Linux/Unix only)
+if vim.fn.has("unix") == 1 then
+  opt.runtimepath:remove('/usr/share/vim/vimfiles')
+end
 
 -- ╭────────────────────────────╮
 -- │ OTHERS                     │
 -- ╰────────────────────────────╯
+-- Modern Neovim features
+opt.laststatus = 3   -- Global statusline (Neovim 0.7+)
+opt.fillchars = { eob = " " } -- Hide ~ for empty lines
+
 -- Clear the screen when Neovim exits (Windows only)
 if vim.fn.has("win32") == 1 then
   vim.api.nvim_create_autocmd("VimLeave", {

@@ -6,6 +6,10 @@ return {
     {
         "lewis6991/gitsigns.nvim",
         event = { "BufReadPost", "BufNewFile" },
+        cond = function()
+            -- Only load in git repositories
+            return vim.fn.isdirectory(".git") == 1 or vim.fn.finddir(".git", ".;") ~= ""
+        end,
         opts = {
             signs                        = {
                 add          = { text = "┃" },

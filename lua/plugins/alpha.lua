@@ -1,6 +1,11 @@
 return {
   'goolord/alpha-nvim',
-  event = "VimEnter",
+  event = function()
+    -- Only load alpha if Neovim started with no arguments
+    if vim.fn.argc() == 0 then
+      return "VimEnter"
+    end
+  end,
   dependencies = {
     'nvim-tree/nvim-web-devicons',
   },

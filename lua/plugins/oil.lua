@@ -1,7 +1,12 @@
 return {
   {
     "stevearc/oil.nvim",
-    enable = false,
+    enabled = false, -- Disabled
+    cmd = "Oil",
+    keys = {
+      { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
+      { "<space>-", function() require("oil").toggle_float() end, desc = "Open oil float" },
+    },
     dependencies = { "nvim-tree/nvim-web-devicons" },
     config = function()
       CustomOilBar = function()

@@ -1,8 +1,21 @@
 return { -- Fuzzy Finder plugin for Neovim using Telescope
   'nvim-telescope/telescope.nvim',
-  -- event = 'VimEnter',  -- Load plugin when Neovim starts (VimEnter event)
   cmd = "Telescope",
-  keys = { "<leader>ff" },
+  keys = {
+    { "<leader>sh", "<cmd>Telescope help_tags<cr>", desc = "[S]earch [H]elp" },
+    { "<leader>sk", "<cmd>Telescope keymaps<cr>", desc = "[S]earch [K]eymaps" },
+    { "<leader>sf", "<cmd>Telescope find_files<cr>", desc = "[S]earch [F]iles" },
+    { "<leader>ss", "<cmd>Telescope builtin<cr>", desc = "[S]earch [S]elect Telescope" },
+    { "<leader>sw", "<cmd>Telescope grep_string<cr>", desc = "[S]earch current [W]ord" },
+    { "<leader>sg", "<cmd>Telescope live_grep<cr>", desc = "[S]earch by [G]rep" },
+    { "<leader>sd", "<cmd>Telescope diagnostics<cr>", desc = "[S]earch [D]iagnostics" },
+    { "<leader>sr", "<cmd>Telescope resume<cr>", desc = "[S]earch [R]esume" },
+    { "<leader>s.", "<cmd>Telescope oldfiles<cr>", desc = "[S]earch Recent Files" },
+    { "<leader><leader>", "<cmd>Telescope buffers<cr>", desc = "[ ] Find existing buffers" },
+    { "<leader>/", desc = "[/] Fuzzily search in current buffer" },
+    { "<leader>s/", desc = "[S]earch [/] in Open Files" },
+    { "<leader>sn", desc = "[S]earch [N]eovim files" },
+  },
   dependencies = {
     'nvim-lua/plenary.nvim', -- Required dependency for many Neovim plugins
     "folke/trouble.nvim",    -- keep this if you want integration
@@ -27,7 +40,8 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
   config = function()
     -- Import Telescope's actions for key mappings
     local actions = require('telescope.actions')
-    local trouble = require("trouble.sources.telescope")
+    local open_trouble = pcall(require, "trouble.sources.telescope") and require("trouble.sources.telescope").open or nil
+    
     -- Telescope configuration
     require('telescope').setup {
       defaults = {
@@ -40,7 +54,7 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
           },
           n = {
             ['q'] = actions.close,    -- Press 'q' to close Telescope window
-            ["<c-t>"] = trouble.open, -- open in trouble from Telescope
+            ["<c-t>"] = open_trouble, -- open in trouble from Telescope
           },
         },
 
@@ -106,39 +120,8 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
     pcall(require('telescope').load_extension, 'fzf')
     pcall(require('telescope').load_extension, 'ui-select')
 
-    -- Define convenient keymaps for common Telescope pickers
-
+    -- Custom keymaps with complex logic (can't be in keys spec)
     local builtin = require('telescope.builtin')
-
-    -- Search Neovim help tags
-    vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-
-    -- Search all keymaps
-    vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-
-    -- Find files (including hidden files)
-    vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-
-    -- Open Telescope builtin picker selector
-    vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-
-    -- Search for the word under cursor in the project
-    vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-
-    -- Search with live grep (project-wide)
-    vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-
-    -- Search diagnostics (like LSP errors and warnings)
-    vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-
-    -- Resume last Telescope picker session
-    vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-
-    -- Show recently opened files
-    vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-
-    -- List open buffers for quick switching
-    vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
     -- Search inside current buffer with dropdown theme, no preview window
     vim.keymap.set('n', '<leader>/', function()

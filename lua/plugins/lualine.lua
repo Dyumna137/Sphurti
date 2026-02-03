@@ -1,6 +1,6 @@
 return {
   'nvim-lualine/lualine.nvim',
-  event = "BufWinEnter",
+  event = "VeryLazy",
   dependencies = { 'nvim-tree/nvim-web-devicons' },
   config = function()
     -- Custom theme colors (based on OneDark)
@@ -41,12 +41,12 @@ return {
     local kanagawa_theme = require("lualine.themes.kanagawa")
 
     -- Dynamically choose theme based on environment variable `NVIM_THEME`
-    local env_var_nvim_theme = os.getenv("NVIM_THEME") or "nord"
-    local themes = {
-      onedark = onedark_theme,
-      nord = "nord",   -- fallback to default theme string
-      kanagawa = kanagawa_theme,
-    }
+    -- local env_var_nvim_theme = os.getenv("NVIM_THEME") or "nord"
+    -- local themes = {
+    --   onedark = onedark_theme,
+    --   nord = "nord",   -- fallback to default theme string
+    --   kanagawa = kanagawa_theme,
+    -- }
 
     -- Mode component with custom icon and formatting
     local mode = {

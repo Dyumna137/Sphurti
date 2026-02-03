@@ -3,24 +3,26 @@
 -- That’s why Lazy.nvim throws this error.
 return {
   {
-    -- autoclose tags
+    -- autoclose tags (requires treesitter)
     'windwp/nvim-ts-autotag',
+    event = { "BufReadPost", "BufNewFile" },
+    ft = { "html", "xml", "javascript", "typescript", "javascriptreact", "typescriptreact", "vue", "svelte" },
   },
-  {
-    -- detect tabstop and shiftwidth automatically
-    'tpope/vim-sleuth',
-  },
+  -- vim-sleuth removed (duplicate - already in init.lua)
   {
     -- Powerful Git integration for Vim
     'tpope/vim-fugitive',
+    cmd = { "Git", "G", "Gdiffsplit", "Gread", "Gwrite", "Ggrep", "GMove", "GDelete", "GBrowse" },
   },
   {
     -- GitHub integration for vim-fugitive
     'tpope/vim-rhubarb',
+    dependencies = { 'tpope/vim-fugitive' },
+    cmd = { "GBrowse" },
   },
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    event = 'VeryLazy',
     opts = {
       -- delay between pressing a key and opening which-key (milliseconds)
       -- this setting is independent of vim.opt.timeoutlen
@@ -74,13 +76,15 @@ return {
   {
     -- Highlight todo, notes, etc in comments
     'folke/todo-comments.nvim',
-    event = 'VimEnter',
+    event = { "BufReadPost", "BufNewFile" },
     dependencies = { 'nvim-lua/plenary.nvim' },
     opts = { signs = false },
   },
   {
     -- high-performance color highlighter
     'norcalli/nvim-colorizer.lua',
+    event = { "BufReadPost", "BufNewFile" },
+    cmd = { "ColorizerToggle", "ColorizerAttachToBuffer", "ColorizerDetachFromBuffer" },
     config = function()
       require('colorizer').setup()
     end,

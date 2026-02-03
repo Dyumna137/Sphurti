@@ -1,13 +1,24 @@
 return { -- Highlight, edit, and navigate code
   'nvim-treesitter/nvim-treesitter',
   event = { "BufReadPost", "BufNewFile" },
+  cmd = { "TSUpdate", "TSInstall" },
   build = ':TSUpdate',
   dependencies = {
     'nvim-treesitter/nvim-treesitter-textobjects',
   },
   config = function()
+    -- Register additional file extensions BEFORE setup
+    vim.filetype.add({
+      extension = {
+        tf = 'terraform',
+        tfvars = 'terraform',
+        pipeline = 'groovy',
+        multibranch = 'groovy',
+      }
+    })
+
     ---@diagnostic disable-next-line: missing-fields
-    require('nvim-treesitter.configs').setup { -- luacheck: ignore 123
+    require('nvim-treesitter.configs').setup {
       -- Add languages to be installed here that you want installed for treesitter
       ensure_installed = {
         'lua',
@@ -40,10 +51,10 @@ return { -- Highlight, edit, and navigate code
         'html',
       },
       -- Autoinstall languages that are not installed
-      auto_install = true,
+      auto_install = false, -- Changed to false to prevent startup stalls
       sync_install = false,
       ignore_install = { "phpdoc", "haskell" },
-      modules = {}, -- required by TSConfig type
+      modules = {},
       highlight = {
         enable = true,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
@@ -113,11 +124,5 @@ return { -- Highlight, edit, and navigate code
         },
       },
     }
-
-    -- Register additional file extensions
-    vim.filetype.add { extension = { tf = 'terraform' } }
-    vim.filetype.add { extension = { tfvars = 'terraform' } }
-    vim.filetype.add { extension = { pipeline = 'groovy' } }
-    vim.filetype.add { extension = { multibranch = 'groovy' } }
   end,
 }
