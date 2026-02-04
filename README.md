@@ -44,7 +44,7 @@
 
 ## 📸 Screenshots
 
-*Add your screenshots here showing the config in action*
+
 
 ---
 
