@@ -7,7 +7,7 @@ return {
     local mode = {
       'mode',
       fmt = function(str)
-        return ' ' .. str -- Add an icon in front of mode text
+        return str -- Add an icon in front of mode text
       end,
     }
 
@@ -55,10 +55,10 @@ return {
     -- Setup lualine
     require('lualine').setup {
       options = {
-        icons_enabled = true,
+        icons_enabled = false,
         theme = kanagawa_theme, --themes[env_var_nvim_theme],   -- dynamically chosen theme
-        section_separators = { left = '', right = '' },
-        component_separators = { left = '', right = '' },
+        section_separators = { left = '', right = '' },
+        component_separators = { left = '|', right = '|' },
         disabled_filetypes = { 'alpha', 'neo-tree', 'Avante' },   -- skip lualine in these filetypes
         always_divide_middle = true,
       },
