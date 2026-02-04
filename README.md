@@ -1,239 +1,455 @@
-# Sphurti - My Neovim Setup
+# Sphurti - Personal Neovim Configuration
 
-My personal Neovim configuration, built over time for C/C++ and embedded systems work. Nothing fancy, just what I need to get stuff done.
-
-## Why This Exists
-
-I got tired of VS Code eating my RAM, so I decided to learn Neovim properly. This config is the result of a lot of trial and error, reading docs, and stealing ideas from other people's configs. 
-
-It's optimized for:
-- C/C++ development (that's what I do most)
-- Embedded systems programming
-- Working with makefiles and build systems
-- Not wasting time waiting for plugins to load
-
-## What's Inside
-
-**Core stuff:**
-- `lazy.nvim` - Plugin manager (fast and doesn't get in the way)
-- `oil.nvim` - File explorer that actually makes sense
-- `telescope` - Fuzzy finder for everything
-- `treesitter` - Better syntax highlighting
-
-**LSP & Completion:**
-- Language servers for C/C++, Python, Lua, etc.
-- Autocompletion that doesn't slow things down
-- Inline diagnostics and error checking
-- Function signatures (super helpful)
-
-**Code Quality:**
-- Auto-formatting (clang-format for C/C++)
-- Linting
-- Git integration (see changes inline)
-
-**Dev Tools:**
-- DAP debugger (because print statements only get you so far)
-- Floating terminal (no need to alt-tab constantly)
-- Live preview for markdown/HTML
-
-**UI:**
-- Kanagawa colorscheme (easy on the eyes)
-- Bufferline (because I always have 20 files open)
-- Lualine status bar
-- Minimalist icons (no emoji bloat)
-
-## Installation
-
-**Requirements:**
-```bash
-# You need these:
-neovim >= 0.9.0
-git
-gcc or clang (for treesitter)
-ripgrep (for telescope grep)
-fd (optional, makes telescope faster)
-
-# On Ubuntu/Debian:
-sudo apt install neovim git build-essential ripgrep fd-find
-
-# Node.js for some LSP servers:
-sudo apt install nodejs npm
-```
-
-**Setup:**
-
-```bash
-# Backup your current config if you have one
-mv ~/.config/nvim ~/.config/nvim.backup
-
-# Clone this repo
-git clone https://github.com/Dyumna137/Sphurti.git ~/.config/nvim
-
-# Start nvim (plugins will auto-install, takes a minute)
-nvim
-
-# Check if everything works
-:checkhealth
-```
-
-**LSP Setup:**
-
-First time you open a C/C++ file, install the language server:
-```vim
-:Mason
-```
-Then install:
-- `clangd` (C/C++)
-- `lua_ls` (Lua)
-- `pyright` (Python)
-- Whatever else you need
-
-## How I Use It
-
-**Finding files:**
-- `<leader>ff` - Find files (I use this constantly)
-- `<leader>fg` - Grep through files (super fast with ripgrep)
-- `<leader>fb` - List open buffers
-- `<leader>fh` - Search help docs
-
-**LSP stuff:**
-- `gd` - Go to definition
-- `gr` - Find references
-- `K` - Show documentation
-- `<leader>ca` - Code actions (fix imports, etc.)
-- `<leader>rn` - Rename symbol
-- `[d` / `]d` - Jump between errors
-
-**Building/Debugging:**
-- `<leader>mm` - Run make
-- `<leader>mc` - Run make clean
-- `<F5>` - Start debugger
-- `<F9>` - Toggle breakpoint
-- `<F10>` - Step over
-- `<F11>` - Step into
-
-**Terminal:**
-- `<leader>tt` - Floating terminal (opens in current file's directory)
-- `<leader>tw` - Floating terminal (opens in project root)
-- `<Esc><Esc>` - Close terminal
-
-**Other:**
-- `<leader>e` - File explorer (oil.nvim)
-- `gcc` - Comment/uncomment line
-- `<leader>xx` - Show all errors/warnings (trouble.nvim)
-
-## File Structure
-
-```
-~/.config/nvim/
-├── init.lua                    # Main config (start here)
-├── lua/
-│   ├── core/
-│   │   ├── options.lua        # Vim options
-│   │   └── keymaps.lua        # Keybindings
-│   └── plugins/
-│       ├── lsp.lua            # LSP config
-│       ├── autocompletion.lua # Completion setup
-│       ├── telescope.lua      # Fuzzy finder
-│       ├── debug.lua          # DAP debugger
-│       └── ...                # Other plugins
-└── lazy-lock.json             # Plugin versions (keep this)
-```
-
-## Customization
-
-**Change colorscheme:**
-Edit `lua/plugins/colortheme.lua`, replace "kanagawa" with your preferred theme.
-
-**Add a plugin:**
-Create a new file in `lua/plugins/` or add to existing ones. Check `:help lazy.nvim` for syntax.
-
-**Add keymaps:**
-Edit `lua/core/keymaps.lua`. Use this format:
-```lua
-vim.keymap.set('n', '<leader>key', function()
-  -- your code
-end, { desc = "What it does" })
-```
-
-**LSP servers:**
-Edit `lua/plugins/lsp/servers.lua` to add/remove language servers.
-
-## Performance
-
-Startup time is around 45-50ms on my machine. If yours is slower:
-
-```bash
-# Profile startup
-nvim --startuptime startup.log +qa
-tail -1 startup.log
-
-# Check what's slow
-:Lazy profile
-```
-
-Most plugins are lazy-loaded, so they only activate when you actually need them.
-
-## Common Issues
-
-**LSP not working:**
-1. Check `:LspInfo` to see if server attached
-2. Run `:Mason` and install the language server
-3. Check `:checkhealth lsp`
-
-**Telescope not finding files:**
-- Make sure `ripgrep` is installed
-- Check if you're in a git repo (or use `<leader>fa` for all files)
-
-**Slow startup:**
-- Run `:Lazy profile` to see what's taking time
-- Check if treesitter is compiling parsers (first time only)
-
-**Colors look wrong:**
-- Make sure your terminal supports 24-bit color
-- Check `$TERM` variable (should be `xterm-256color` or similar)
-
-## Things I Learned Building This
-
-- Less is more. I removed like 5 plugins I never used and startup got faster.
-- Lazy-loading everything makes a huge difference.
-- The default LSP keybinds are actually pretty good, don't overcomplicate.
-- Telescope is amazing once you learn to use it properly.
-- You don't need a file tree open all the time (oil.nvim is better).
-- Commenting out debug code beats using a debugger 90% of the time, but that 10% though...
-
-## Resources That Helped
-
-- [Neovim docs](https://neovim.io/doc/) (actually pretty good)
-- [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (borrowed some ideas)
-- [lazy.nvim docs](https://github.com/folke/lazy.nvim)
-- Random YouTube videos at 2AM when things broke
-
-## Contributing
-
-If you find bugs or have suggestions, open an issue. PRs welcome if they:
-- Don't slow down startup
-- Are actually useful for C/C++ development
-- Come with a reason WHY (not just "I like it this way")
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
-
-## License
-
-MIT - Do whatever you want with it. If it breaks your system, that's on you though.
-
-## Acknowledgments
-
-Stole ideas from:
-- kickstart.nvim
-- ThePrimeagen's config
-- TJ DeVries' streams
-- Various Reddit threads at 3AM
-
-Built with frustration, caffeine, and the Neovim docs.
+A lightweight, fast Neovim setup optimized for C/C++ and embedded systems development. Built over time through experimentation and focused on performance and usability.
 
 ---
 
-**Status:** Works on my machine ✓  
-**Startup:** ~48ms  
-**Coffee consumed during creation:** Too much
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Installation](#installation)
+- [Key Mappings](#key-mappings)
+- [Plugin List](#plugin-list)
+- [Configuration Structure](#configuration-structure)
+- [Customization](#customization)
+- [Performance](#performance)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Overview
+
+This configuration focuses on C/C++ and embedded systems development with an emphasis on:
+
+- Fast startup time (under 50ms)
+- Minimal bloat (only 24 plugins)
+- Proper LSP integration
+- Smart lazy-loading
+- No Nerd Font dependency (uses minimalist text icons)
+
+The config started as a way to move away from VS Code's memory usage and has evolved into a focused development environment.
+
+---
+
+## Features
+
+### Core Functionality
+
+- **Plugin Management:** lazy.nvim for fast, lazy-loaded plugins
+- **File Explorer:** oil.nvim for intuitive file navigation
+- **Fuzzy Finding:** Telescope with smart git-aware file searching
+- **Syntax:** Treesitter for accurate syntax highlighting
+
+### Language Support
+
+- **LSP Integration:** Full language server support via nvim-lspconfig and Mason
+- **Autocompletion:** Fast completion with blink.cmp
+- **Diagnostics:** Real-time error checking with trouble.nvim
+- **Formatting:** Auto-formatting with none-ls (null-ls successor)
+
+### Development Tools
+
+- **Debugger:** nvim-dap with UI for visual debugging
+- **Git Integration:** Inline git changes with gitsigns
+- **Terminal:** Floating terminal that opens in file directory or project root
+- **Live Preview:** HTML and Markdown preview support
+
+### UI Components
+
+- **Colorscheme:** Kanagawa (soft colors, easy on eyes)
+- **Statusline:** lualine with diagnostic and git info
+- **Bufferline:** Tab-like buffer management
+- **Icons:** Minimalist text icons (works without Nerd Fonts)
+
+---
+
+## Installation
+
+### Prerequisites
+
+**Required:**
+```bash
+neovim >= 0.9.0
+git
+gcc or clang (for treesitter compilation)
+```
+
+**Recommended:**
+```bash
+ripgrep (for fast file searching)
+fd (for improved file finding)
+nodejs and npm (for LSP servers)
+```
+
+**Installation on Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install neovim git build-essential ripgrep fd-find nodejs npm
+```
+
+### Setup
+
+1. **Backup existing config:**
+   ```bash
+   mv ~/.config/nvim ~/.config/nvim.backup
+   ```
+
+2. **Clone repository:**
+   ```bash
+   git clone https://github.com/Dyumna137/Sphurti.git ~/.config/nvim
+   ```
+
+3. **Launch Neovim:**
+   ```bash
+   nvim
+   ```
+   Plugins will automatically install on first launch (takes 1-2 minutes).
+
+4. **Install language servers:**
+   ```vim
+   :Mason
+   ```
+   Install the servers you need:
+   - `clangd` for C/C++
+   - `lua_ls` for Lua
+   - `pyright` for Python
+   - Others as needed
+
+5. **Verify installation:**
+   ```vim
+   :checkhealth
+   ```
+
+---
+
+## Key Mappings
+
+Leader key is `<Space>`.
+
+### File Operations
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<leader>ff` | Find files | Smart git-aware file finding |
+| `<leader>fa` | Find all files | Search all files (ignores .gitignore) |
+| `<leader>fg` | Live grep | Search text in files |
+| `<leader>fb` | Find buffers | List open buffers |
+| `<leader>e` | File explorer | Open oil.nvim file browser |
+
+### LSP Operations
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `gd` | Go to definition | Jump to function/variable definition |
+| `gr` | Go to references | Show all references |
+| `K` | Hover documentation | Show symbol info |
+| `<leader>ca` | Code actions | Show available code fixes |
+| `<leader>rn` | Rename symbol | Rename across project |
+| `[d` | Previous diagnostic | Jump to previous error |
+| `]d` | Next diagnostic | Jump to next error |
+
+### Diagnostics
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<leader>xx` | Toggle diagnostics | Show all errors/warnings (Trouble) |
+| `<leader>xX` | Buffer diagnostics | Show errors in current file |
+| `<leader>sd` | Search diagnostics | Fuzzy find diagnostics |
+
+### Build and Debug
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<leader>mm` | Make | Run make command |
+| `<leader>mc` | Make clean | Run make clean |
+| `<F5>` | Start/Continue | Start or continue debugging |
+| `<F9>` | Toggle breakpoint | Set/remove breakpoint |
+| `<F10>` | Step over | Debug step over |
+| `<F11>` | Step into | Debug step into |
+
+### Terminal
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<leader>tt` | Toggle terminal | Open in file directory |
+| `<leader>tw` | Toggle terminal | Open in project root |
+| `<Esc><Esc>` | Close terminal | Exit terminal mode |
+
+### Editor
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<Esc>` | Clear search | Remove search highlights |
+| `<C-s>` | Save | Save current file |
+| `gcc` | Comment line | Toggle line comment |
+| `gc` | Comment selection | Toggle comment (visual mode) |
+
+### Window Management
+
+| Keymap | Action | Description |
+|--------|--------|-------------|
+| `<leader>vv` | Vertical split | Split window vertically |
+| `<leader>hh` | Horizontal split | Split window horizontally |
+| `<C-h/j/k/l>` | Navigate splits | Move between windows |
+| `<leader>se` | Equalize splits | Make all splits equal size |
+
+---
+
+## Plugin List
+
+### Core Utilities
+- **lazy.nvim** - Plugin manager
+- **oil.nvim** - File explorer
+- **telescope.nvim** - Fuzzy finder
+- **bufdelete.nvim** - Safe buffer deletion
+
+### UI & Appearance
+- **kanagawa.nvim** - Colorscheme
+- **lualine.nvim** - Statusline
+- **bufferline.nvim** - Buffer tabs
+- **indent-blankline.nvim** - Indentation guides
+
+### Code Intelligence
+- **nvim-treesitter** - Syntax highlighting
+- **nvim-lspconfig** - LSP client
+- **mason.nvim** - LSP installer
+- **blink.cmp** - Autocompletion
+- **lsp_signature.nvim** - Function signatures
+- **nvim-autopairs** - Auto-close brackets
+
+### Code Quality
+- **none-ls.nvim** - Formatting and linting
+- **trouble.nvim** - Diagnostics list
+
+### Development Tools
+- **nvim-dap** - Debugger
+- **nvim-dap-ui** - Debug UI
+- **gitsigns.nvim** - Git integration
+- **nvim-preview** - Live preview
+- **sqls** - SQL utilities
+
+---
+
+## Configuration Structure
+
+```
+~/.config/nvim/
+├── init.lua                 # Main entry point
+├── lua/
+│   ├── core/
+│   │   ├── options.lua     # Editor settings (tab width, etc.)
+│   │   └── keymaps.lua     # Keybindings
+│   └── plugins/
+│       ├── lsp.lua         # LSP configuration
+│       ├── lsp/
+│       │   ├── mason.lua   # LSP server installation
+│       │   ├── servers.lua # Server-specific settings
+│       │   └── on_attach.lua # LSP keymaps
+│       ├── autocompletion.lua
+│       ├── treesitter.lua
+│       ├── telescope.lua
+│       ├── trouble.lua
+│       ├── debug.lua
+│       └── ...
+└── lazy-lock.json          # Plugin version lock file
+```
+
+**Key files:**
+- **init.lua** - Loads core modules and plugins
+- **core/options.lua** - Vim options (indentation, line numbers, etc.)
+- **core/keymaps.lua** - All keybindings
+- **plugins/** - Each plugin in its own file
+
+---
+
+## Customization
+
+### Change Colorscheme
+
+Edit `lua/plugins/colortheme.lua`:
+```lua
+return {
+  "rebelot/kanagawa.nvim",  -- Change this line
+  priority = 1000,
+  config = function()
+    vim.cmd.colorscheme("kanagawa")  -- And this line
+  end,
+}
+```
+
+Popular alternatives:
+- `"folke/tokyonight.nvim"` with `colorscheme("tokyonight")`
+- `"catppuccin/nvim"` with `colorscheme("catppuccin")`
+- `"EdenEast/nightfox.nvim"` with `colorscheme("carbonfox")`
+
+### Add Language Server
+
+1. Open Mason:
+   ```vim
+   :Mason
+   ```
+
+2. Search and install your LSP server
+
+3. Add to `lua/plugins/lsp/servers.lua`:
+   ```lua
+   ["rust_analyzer"] = {},  -- Example for Rust
+   ```
+
+### Add Keybinding
+
+Edit `lua/core/keymaps.lua`:
+```lua
+vim.keymap.set('n', '<leader>key', function()
+  -- Your action here
+end, { desc = "Description shown in which-key" })
+```
+
+### Add Plugin
+
+Create new file in `lua/plugins/` or add to existing file:
+```lua
+return {
+  "author/plugin-name",
+  event = "VeryLazy",  -- Lazy load
+  opts = {
+    -- Plugin options
+  },
+}
+```
+
+---
+
+## Performance
+
+**Current metrics:**
+- Startup time: 45-50ms
+- Plugin count: 24
+- Total lines: ~1,850
+
+**Performance tips:**
+- Most plugins are lazy-loaded
+- Use `:Lazy profile` to see load times
+- Use `nvim --startuptime startup.log +qa` to profile startup
+
+**If startup is slow:**
+```bash
+# Profile startup
+nvim --startuptime startup.log +qa
+tail -20 startup.log
+
+# Check what's taking time
+:Lazy profile
+```
+
+---
+
+## Troubleshooting
+
+### LSP Not Working
+
+**Check if server is running:**
+```vim
+:LspInfo
+```
+
+**Install language server:**
+```vim
+:Mason
+```
+
+**Check health:**
+```vim
+:checkhealth lsp
+```
+
+### Telescope Not Finding Files
+
+**Make sure ripgrep is installed:**
+```bash
+which rg
+```
+
+**In git repo, use:**
+- `<leader>ff` for git files (respects .gitignore)
+- `<leader>fa` for all files (ignores .gitignore)
+
+### Slow Startup
+
+**Profile startup:**
+```bash
+nvim --startuptime startup.log +qa
+tail -30 startup.log
+```
+
+**Check plugin load times:**
+```vim
+:Lazy profile
+```
+
+### Terminal Colors Wrong
+
+**Ensure 24-bit color support:**
+```bash
+echo $TERM
+# Should be: xterm-256color or similar
+```
+
+**Add to shell config:**
+```bash
+export TERM=xterm-256color
+```
+
+### Diagnostics Not Showing
+
+**Check if LSP is attached:**
+```vim
+:LspInfo
+```
+
+**Manually trigger diagnostics:**
+```vim
+:lua vim.diagnostic.open_float()
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+**Quick guidelines:**
+- Keep it minimal (no unnecessary plugins)
+- Focus on C/C++/embedded development
+- Maintain fast startup time
+- Test changes locally
+- Follow existing code style
+
+---
+
+## License
+
+MIT License - See LICENSE file for details.
+
+---
+
+## Acknowledgments
+
+Built with inspiration from:
+- kickstart.nvim
+- ThePrimeagen's config
+- Various community configs
+
+Resources used:
+- Neovim documentation
+- lazy.nvim docs
+- Community plugins and their documentation
+
+---
+
+**Status:** Stable and actively used  
+**Startup Time:** ~48ms  
+**Last Updated:** 2026-02-04
