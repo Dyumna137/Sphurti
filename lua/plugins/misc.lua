@@ -2,12 +2,12 @@
 -- this plugins not support Lua-based configuration cause as example tpope/vim-rhubarb is a pure Vimscript plugin).
 -- That’s why Lazy.nvim throws this error.
 return {
-  {
-    -- autoclose tags (requires treesitter)
-    'windwp/nvim-ts-autotag',
-    event = { "BufReadPost", "BufNewFile" },
-    ft = { "html", "xml", "javascript", "typescript", "javascriptreact", "typescriptreact", "vue", "svelte" },
-  },
+  -- REMOVED: nvim-ts-autotag (web dev only - not needed for C/C++/embedded work)
+  -- {
+  --   'windwp/nvim-ts-autotag',
+  --   event = { "BufReadPost", "BufNewFile" },
+  --   ft = { "html", "xml", "javascript", "typescript", "javascriptreact", "typescriptreact", "vue", "svelte" },
+  -- },
   -- vim-sleuth removed (duplicate - already in init.lua)
   {
     -- Powerful Git integration for Vim
