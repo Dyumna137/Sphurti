@@ -1,13 +1,21 @@
--- ~/.nvim/lua/plugins/trouble.lua
+-- trouble.lua - Better diagnostics list with auto-refresh
 return {
   {
     "folke/trouble.nvim",
-    cmd = "Trouble",
+    event = "VeryLazy", -- Load early, not on command (fixes slow activation)
     dependencies = { "nvim-tree/nvim-web-devicons" },
     
-    -- Simplified config: removed over-engineered custom Telescope picker
     opts = {
-      focus = true, -- Auto-focus Trouble window when opened
+      focus = true,              -- Auto-focus when opened
+      auto_refresh = true,       -- Auto-refresh when diagnostics change
+      auto_close = false,        -- Don't auto-close when no diagnostics
+      auto_open = false,         -- Don't auto-open (manual control)
+      restore = true,            -- Restore last position
+      follow = true,             -- Follow cursor in current buffer
+      indent_guides = true,      -- Show indent guides
+      max_items = 200,           -- Max items to show
+      multiline = true,          -- Show multiline messages
+      pinned = false,            -- Don't pin the window
     },
 
     -- Keymaps for quickly opening Trouble views
@@ -43,5 +51,19 @@ return {
         desc = "Quickfix List (Trouble)",
       },
     },
+    
+    -- Ensure trouble loads after LSP
+    config = function(_, opts)
+      require("trouble").setup(opts)
+      
+      -- Auto-refresh trouble when diagnostics change
+      vim.api.nvim_create_autocmd("DiagnosticChanged", {
+        callback = function()
+          if require("trouble").is_open() then
+            require("trouble").refresh()
+          end
+        end,
+      })
+    end,
   },
 }

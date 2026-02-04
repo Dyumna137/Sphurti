@@ -32,19 +32,19 @@ return {
         left_mouse_command = "buffer %d",
         middle_mouse_command = nil,
 
-        -- ▼ Buffer indicator (e.g., ▎ for active buffer)
+        -- ▼ Buffer indicator (minimalist)
         indicator = {
-          icon = '▎',
+          icon = '|',
           style = 'icon', -- options: 'icon', 'underline', 'none'
         },
 
         -- ▼ Icons for various UI parts
-        buffer_close_icon = '󰅖',
-        modified_icon = '●',
+        buffer_close_icon = '[x]',
+        modified_icon = '[*]',
         close_icon = '',
         left_trunc_marker = '',
         right_trunc_marker = '',
-        icon_pinned = '󰐃',
+        icon_pinned = '[pin]',
 
         -- ▼ Optional buffer name formatting, Now i do not want to change any buffer name.
         -- name_formatter = function(buf)

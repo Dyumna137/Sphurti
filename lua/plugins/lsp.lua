@@ -60,10 +60,10 @@ return {
       -- ╰────────────────────────────────────╯
       -- Purpose: Define gutter sign glyphs once (clear & consistent).
       local diag_icons = {
-        Error = "",
-        Warn  = "",
-        Hint  = "",
-        Info  = "",
+        Error = "[E]",
+        Warn  = "[W]",
+        Hint  = "[H]",
+        Info  = "[I]",
       }
       for severity, icon in pairs(diag_icons) do
         local hl = "DiagnosticSign" .. severity

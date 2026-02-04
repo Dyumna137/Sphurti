@@ -29,10 +29,10 @@ return {
       sources = { 'nvim_diagnostic' },
       sections = { 'error', 'warn' },
       symbols = {
-        error = ' ',
-        warn = ' ',
-        info = ' ',
-        hint = ' ',
+        error = '[E] ',
+        warn = '[W] ',
+        info = '[I] ',
+        hint = '[H] ',
       },
       colored = false,
       update_in_insert = false,
@@ -45,9 +45,9 @@ return {
       'diff',
       colored = false,
       symbols = {
-        added = ' ',
-        modified = ' ',
-        removed = ' ',
+        added = '[+] ',
+        modified = '[~] ',
+        removed = '[-] ',
       },
       cond = hide_in_width,
     }
