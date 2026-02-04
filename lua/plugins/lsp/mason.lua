@@ -116,11 +116,12 @@ function M.config()
   --   • Merge completion provider (blink.cmp) capabilities.
   --   • Add foldingRange support (static line folding).
   local capabilities = vim.lsp.protocol.make_client_capabilities()
-  local ok_blink, blink_cmp = pcall(require, "blink.cmp")
-  if ok_blink then
-    capabilities = vim.tbl_deep_extend("force", capabilities, blink_cmp.get_lsp_capabilities({}, false))
-  else
-    vim.notify("[mason.lua] blink.cmp not found; proceeding with base capabilities", vim.log.levels.INFO)
+  -- Use base capabilities (blink.cmp requires Neovim 0.10+)
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  -- Add nvim-cmp capabilities if available
+  local ok_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+  if ok_cmp then
+    capabilities = vim.tbl_deep_extend("force", capabilities, cmp_nvim_lsp.default_capabilities())
   end
   capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 

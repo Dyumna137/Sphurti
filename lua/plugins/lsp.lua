@@ -35,27 +35,12 @@ return {
       { import = "plugins.lsp.mason" },
 
       -- Completion engine (choose ONE; remove if handled elsewhere)
-      "saghen/blink.cmp",
-
-      -- Progress / status UI
-      { "j-hui/fidget.nvim", event = "LspAttach", opts = {} },
 
       -- Java (lazy-loaded)
       { "mfussenegger/nvim-jdtls", ft = "java" },
 
       -- Lua library enrichments
       {
-        "folke/lazydev.nvim",
-        ft = "lua",
-        opts = {
-          library = {
-            { path = "${3rd}/luv/library", words = { "vim%.uv" } },
-          },
-        },
-      },
-    },
-    config = function()
-      -- ╭────────────────────────────────────╮
       -- │ Diagnostic Sign Icons              │
       -- ╰────────────────────────────────────╯
       -- Purpose: Define gutter sign glyphs once (clear & consistent).
