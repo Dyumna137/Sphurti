@@ -63,16 +63,13 @@ require("lazy").setup({
 	-- CORE UTILITIES
 	-- ─────────────────────────────────────────────────────────────
 	{ "famiu/bufdelete.nvim", cmd = "Bdelete" },  -- Delete buffers safely
-	require("plugins.oil"),                        -- File explorer
 	require("plugins.telescope"),                  -- Fuzzy finder
 
 	-- ─────────────────────────────────────────────────────────────
 	-- UI & APPEARANCE
 	-- ─────────────────────────────────────────────────────────────
 	require("plugins.colortheme"),                 -- Color scheme
-	require("plugins.bufferline"),                 -- Tab-like buffer list
 	require("plugins.lualine"),                    -- Status line
-	require("plugins.indent_line"),                -- Indentation guides
 
 	-- ─────────────────────────────────────────────────────────────
 	-- CODE INTELLIGENCE
@@ -87,33 +84,17 @@ require("lazy").setup({
 	-- CODE QUALITY
 	-- ─────────────────────────────────────────────────────────────
 	require("plugins.none-ls"),                    -- Formatting & linting
-	require("plugins.trouble"),                    -- Diagnostics list
 
 	-- ─────────────────────────────────────────────────────────────
 	-- DEVELOPMENT TOOLS
 	-- ─────────────────────────────────────────────────────────────
 	require("plugins.debug"),                      -- Debugger (DAP)
 	require("plugins.gitsigns"),                   -- Git integration
-	require("plugins.live-preview"),               -- Live preview (HTML/MD)
-	require("plugins.sqlua"),                      -- SQL utilities
 	
 	-- ─────────────────────────────────────────────────────────────
 	-- EXTRAS
 	-- ─────────────────────────────────────────────────────────────
 	require("plugins.misc"),                       -- Small utilities
-	
-	-- Custom floating terminal
-	{
-		name = "floaterminal",
-		dir = vim.fn.stdpath("config") .. "/lua/plugins",
-		config = function()
-			require("plugins.floaterminal")
-		end,
-		keys = {
-			{ "<leader>tt", desc = "Toggle Terminal (file dir)" },
-			{ "<leader>tw", desc = "Toggle Terminal (cwd)" },
-		},
-	},
 }, {
 	-- ═══════════════════════════════════════════════════════════════
 	-- LAZY.NVIM OPTIONS
