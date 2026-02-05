@@ -1,312 +1,260 @@
---[[============================================================================
-#  mason.lua — Unified Mason Plugin Spec + Full LSP/Tool Management
+--[[----------------------------------------------------------------------------
+mason.lua  —  Unified Mason + LSP setup
+-------------------------------------------------------------------------------
 
-This single file:
-  1. Declares the Mason plugin (for lazy.nvim or similar managers).
-  2. Manages installation of LSP servers, linters, and formatters.
-  3. Sets up each LSP server with shared `on_attach` + capabilities.
-  4. Auto-installs everything (servers + extra tools) via mason-tool-installer.
-  5. Applies a safety net to run `on_attach` for non‑Mason LSP clients (e.g. jdtls).
+Purpose
+  - Configure mason, mason-lspconfig and an installer for extra tools.
+  - Provide a single place to declare LSP servers, server overrides,
+    and extra tools (formatters/linters) to ensure across machines.
+  - Merge shared capabilities and attach a shared `on_attach`.
+  - Be defensive: if a dependency is missing, abort gracefully with a notification.
 
-==============================================================================
-##  How to Use
-Place this file at:  lua/plugins/lsp/mason.lua
+Where to put it
+  - lua/plugins/lsp/mason.lua
+  - When used with lazy.nvim return the plugin spec (this file does that).
 
-lazy.nvim will auto-pick it up (because it returns a plugin spec).
-If you are using another manager (like packer), adapt the returned table accordingly.
-- lua/plugins/lsp/mason.lua returns a plugin spec table
-===============================================================================
-## Responsibilities
-1. Initialize Mason, mason-lspconfig, mason-tool-installer.
-2. Define the list of LSP servers + per-server overrides.
-3. Define extra non-LSP tools (formatters / linters).
-4. Merge global capabilities (blink.cmp + folding).
-5. Provide custom commands for certain servers (e.g. Ruff).
-6. Attach proper root_dir logic where needed.
-7. Guarantee everything is installed automatically.
-8. Keep config resilient (pcall guards + notifications).
+Customization points
+  - `servers` table: add/remove LSP servers, or add per-server fields:
+      settings, on_attach, capabilities, root_dir, commands
+  - `extra_tools`: add binaries (mason tool names) to auto-install
+-------------------------------------------------------------------------------]]
 
-===============================================================================
-## Customization Quick Reference
-Edit these tables below:
-  - servers: add/remove LSP servers or override settings/root_dir/on_attach/capabilities.
-  - extra_tools: add binaries (formatter, linter, etc.) supported by Mason.
-  - ensure_installed: auto-computed (servers + extra_tools) but you can append more manually.
-
-===============================================================================
-## Testing / Debugging
-  :Mason              → Inspect registry and install status
-  :LspInfo            → Active servers
-  :MasonToolsInstall  → Force re-run installer
-  :checkhealth        → General diagnostics
-
-===============================================================================
-## Safe Behavior
-If any dependency is missing, configuration gracefully aborts with a warning
-(no hard errors during startup).
-
-===============================================================================
---]]
-
--- ╭────────────────────────────────────╮
--- │ Module Table                       │
--- ╰────────────────────────────────────╯
--- Purpose: Provide a namespace for the config function.
--- Responsibilities:
---   • Hold the main configuration entry point invoked by the plugin spec.
 local M = {}
 
--- ╭────────────────────────────────────╮
--- │ Main Config Entry Point            │
--- ╰────────────────────────────────────╯
--- Purpose: Orchestrate full Mason + LSP tooling setup when the plugin loads.
--- Responsibilities:
---   • Safely require dependencies.
---   • Initialize Mason ecosystems.
---   • Prepare capabilities, servers, and tool installer.
---   • Register handlers and safety autocommands.
+local function warn(msg)
+  vim.notify(("[mason.lua] %s"):format(msg), vim.log.levels.WARN)
+end
+
+local function info(msg)
+  vim.notify(("[mason.lua] %s"):format(msg), vim.log.levels.INFO)
+end
+
 function M.config()
-  -- ╭────────────────────────────────────╮
-  -- │ Protected Requires                 │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Avoid runtime errors if plugins are missing.
-  -- Responsibilities:
-  --   • Notify the user (non-fatal) and abort early when a core dependency is absent.
+  -- ---------- Protected requires ----------
   local ok_mason, mason = pcall(require, "mason")
   if not ok_mason then
-    vim.notify("[mason.lua] mason.nvim not available; skipping Mason setup", vim.log.levels.WARN)
+    warn("mason.nvim not available; skipping Mason setup")
     return
   end
 
   local ok_mason_lsp, mason_lsp = pcall(require, "mason-lspconfig")
   if not ok_mason_lsp then
-    vim.notify("[mason.lua] mason-lspconfig not available; skipping", vim.log.levels.WARN)
+    warn("mason-lspconfig not available; skipping LSP bridging")
     return
   end
 
   local ok_installer, mason_tool_installer = pcall(require, "mason-tool-installer")
   if not ok_installer then
-    vim.notify("[mason.lua] mason-tool-installer not available; skipping extra tool install", vim.log.levels.WARN)
+    warn("mason-tool-installer not available; extra tool auto-install disabled")
+    -- We continue because LSPs may still be installed separately.
+  end
+
+  local ok_lspconfig, lspconfig = pcall(require, "lspconfig")
+  if not ok_lspconfig then
+    warn("nvim-lspconfig not available; aborting LSP setup")
     return
   end
 
-  -- ╭────────────────────────────────────╮
-  -- │ Base Mason Setup                   │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Initialize core Mason registry + basic lsp bridge.
-  -- Responsibilities:
-  --   • Setup mason UI / paths.
-  --   • Initialize mason-lspconfig (specific server handlers configured later).
-  mason.setup()
-  -- (Optional) mason_lsp.setup() bare call isn't necessary; the handler setup below re-calls it.
+  -- ---------- Mason base setup ----------
+  mason.setup() -- keep default UI; override here if you like
+  -- (mason-lspconfig handlers are registered below)
 
-  -- ╭────────────────────────────────────╮
-  -- │ Shared on_attach                   │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Reuse your keymaps / buffer customizations across all servers.
-  -- Responsibilities:
-  --   • Provide uniform behavior (keymaps, formatting bindings, etc.) for every LSP client.
-  local on_attach = require("plugins.lsp.on_attach").on_attach
+  -- ---------- shared on_attach ----------
+  local ok_on_attach, on_attach = pcall(require, "plugins.lsp.on_attach")
+  if not ok_on_attach or type(on_attach.on_attach) ~= "function" then
+    warn("plugins.lsp.on_attach not found or invalid; on_attach will be nil")
+    on_attach = nil
+  else
+    on_attach = on_attach.on_attach
+  end
 
-  -- ╭────────────────────────────────────╮
-  -- │ Default LSP Capabilities           │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Advertise client feature support to language servers.
-  -- Responsibilities:
-  --   • Merge completion provider (blink.cmp) capabilities.
-  --   • Add foldingRange support (static line folding).
+  -- ---------- capabilities (nvim-cmp aware) ----------
   local capabilities = vim.lsp.protocol.make_client_capabilities()
-  -- Use base capabilities (blink.cmp requires Neovim 0.10+)
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  -- Add nvim-cmp capabilities if available
   local ok_cmp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-  if ok_cmp then
+  if ok_cmp and type(cmp_nvim_lsp.default_capabilities) == "function" then
     capabilities = vim.tbl_deep_extend("force", capabilities, cmp_nvim_lsp.default_capabilities())
   end
+  -- Add foldingRange capability (conservative).
+  capabilities.textDocument = capabilities.textDocument or {}
   capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
-  -- ╭────────────────────────────────────╮
-  -- │ Project Root Helper                │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Determine project root for file-scoped language servers.
-  -- Responsibilities:
-  --   • Ascend directories to locate a .git folder.
-  --   • Fallback to the directory containing the current buffer/file.
+  -- ---------- robust root detection ----------
+  -- tries git root first, then common project markers, then buffer dir
   local function get_root_dir(startpath)
-    local git_dir = vim.fs.find(".git", { upward = true, path = startpath })[1]
-    return git_dir and vim.fs.dirname(git_dir) or vim.fs.dirname(startpath)
+    if type(startpath) ~= "string" or startpath == "" then
+      startpath = vim.api.nvim_buf_get_name(0)
+    end
+    local candidates = vim.fs.find({ ".git", "pyproject.toml", "package.json", "Cargo.toml" }, {
+      upward = true,
+      path = startpath,
+    })
+    if candidates and #candidates > 0 then
+      return vim.fs.dirname(candidates[1])
+    end
+    local bufname = vim.api.nvim_buf_get_name(0)
+    if bufname and bufname ~= "" then
+      return vim.fs.dirname(bufname)
+    end
+    return vim.loop.cwd()
   end
 
-  -- ╭────────────────────────────────────╮
-  -- │ Server Definitions                 │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Enumerate and customize per-LSP server configuration.
-  -- Responsibilities:
-  --   • Provide settings, root_dir overrides, and custom command injection.
-  --   • Supply specialized modules (e.g., clangd config from a separate file).
+  -- ---------- server definitions (edit this) ----------
+  -- Each key is the mason-lspconfig server name.
+  -- Per-server keys you can use: settings, on_attach, capabilities, root_dir, commands
+  -- The `commands` table supports two shapes:
+  --   commands = { MyCmd = { fn = function() ... end, desc = "desc" } }
+  --   or  commands = { MyCmd = function() ... end }   -- desc optional
   local servers = {
+    -- Lua/Neovim
     lua_ls = {
       settings = {
         Lua = {
           runtime = { version = "LuaJIT" },
-          workspace = {
-            checkThirdParty = false,
-            library = {
-              "${3rd}/luv/library",
-              unpack(vim.api.nvim_get_runtime_file("", true)),
-            },
-          },
+          workspace = { library = vim.api.nvim_get_runtime_file("", true), checkThirdParty = false },
           completion = { callSnippet = "Replace" },
           telemetry = { enable = false },
-          diagnostics = {
-            globals = { "vim" },
-            disable = { "missing-fields" },
-          },
+          diagnostics = { globals = { "vim" }, disable = { "missing-fields" } },
         },
       },
       root_dir = get_root_dir,
     },
 
-    ruff = { -- Python lint/format integration (Ruff LSP)
+    -- Python: pyright + optional Ruff commands (if using ruff-lsp)
+    pyright = {},
+
+    -- Ruff LSP (server name may differ depending on mason package; adjust if needed)
+    ruff = {
       commands = {
         RuffAutofix = {
-          function()
+          fn = function()
             vim.lsp.buf_request(0, "workspace/executeCommand", {
               command = "ruff.applyAutofix",
               arguments = { { uri = vim.uri_from_bufnr(0) } },
             })
           end,
-          description = "Ruff: Fix all auto-fixable problems",
+          desc = "Ruff: apply autofix",
         },
         RuffOrganizeImports = {
-          function()
+          fn = function()
             vim.lsp.buf_request(0, "workspace/executeCommand", {
               command = "ruff.applyOrganizeImports",
               arguments = { { uri = vim.uri_from_bufnr(0) } },
             })
           end,
-          description = "Ruff: Organize imports",
+          desc = "Ruff: organize imports",
         },
       },
     },
 
+    -- C/C++
+    clangd = require("plugins.lsp.ft.clang"), -- example: returns a table with settings for clangd
 
-    pyright = {},
-    clangd = require("plugins.lsp.ft.clang"),
+    -- Rust
     rust_analyzer = {},
+
+    -- Java (jdtls is often setup separately as it requires special initialization)
     jdtls = {},
+
+    -- Shell
     bashls = {},
-
-
-
-
-
-
   }
 
-  -- ╭────────────────────────────────────╮
-
+  -- ---------- extra tools (formatters/linters) ----------
+  -- Names should match mason package names; edit as required.
   local extra_tools = {
     "clang-format",
     "black",
     "isort",
     "ruff",
     "stylua",
-  }
-
-
-
-
-
-
-
-
-    "black",
-    "isort",
     "flake8",
     "prettier",
   }
 
-  -- ╭────────────────────────────────────╮
-  -- │ Aggregate Installation Set         │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Consolidate servers + external tools into a single list.
-  -- Responsibilities:
-  --   • Feed the mason-tool-installer with a unified ensure_installed table.
+  -- ---------- aggregate ensure_installed ----------
   local ensure_installed = vim.tbl_keys(servers)
-  vim.list_extend(ensure_installed, extra_tools)
-  -- table.insert(ensure_installed, "my-custom-cli") -- Example for manual additions.
+  if extra_tools and #extra_tools > 0 then
+    vim.list_extend(ensure_installed, extra_tools)
+  end
 
-  -- ╭────────────────────────────────────╮
-  -- │ Mason Tool Installer Setup         │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Automatically install any missing servers/tools.
-  -- Responsibilities:
-  --   • Guarantee developer environment consistency across machines.
-  mason_tool_installer.setup({
-    ensure_installed = ensure_installed,
-    -- run_on_start = true,
-    -- start_delay = 3000,
-  })
+  -- ---------- mason-tool-installer (optional) ----------
+  if ok_installer then
+    mason_tool_installer.setup({
+      ensure_installed = ensure_installed,
+      -- run_on_start = true, -- enable if you want it to run automatically
+      -- start_delay = 3000,  -- ms, useful if you want to wait for UI to settle
+    })
+  end
 
-  -- ╭────────────────────────────────────╮
-  -- │ Mason LSP Handlers                 │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: Register a generic handler invoked for every Mason-managed server.
-  -- Responsibilities:
-  --   • Merge global capabilities + per-server overrides.
-  --   • Wrap custom server commands into buffer-local user commands on attach.
-  local lspconfig = require("lspconfig")
-
+  -- ---------- mason-lspconfig handler ----------
   mason_lsp.setup({
     ensure_installed = vim.tbl_keys(servers),
-    automatic_installation = false, -- Already handled by mason-tool-installer
+    automatic_installation = false, -- mason-tool-installer handles external binaries
     handlers = {
+      -- default handler used for any server not explicitly listed in handlers
       function(server_name)
-        local server_opts = servers[server_name] or {}
+        local template = servers[server_name] or {}
+        -- deep-copy template so we don't mutate the original table stored above
+        local server_opts = vim.deepcopy(template)
 
-        -- Merge on_attach (server-specific override falls back to global)
+        -- attach shared on_attach unless the server defines its own
         server_opts.on_attach = server_opts.on_attach or on_attach
 
-        -- Merge capabilities (server-specific can override or add)
-        server_opts.capabilities = vim.tbl_extend("force", capabilities, server_opts.capabilities or {})
+        -- merge capabilities; server-specific capabilities override the shared ones
+        server_opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server_opts.capabilities or {})
 
-        -- Inject user commands declared under server_opts.commands
-        if server_opts.commands then
-          local cmd_defs = server_opts.commands
+        -- provide root_dir fallback if not set
+        server_opts.root_dir = server_opts.root_dir or get_root_dir
+
+        -- register user commands declared in server_opts.commands (buffer-local)
+        if server_opts.commands and type(server_opts.commands) == "table" then
+          local commands = server_opts.commands
           local original_on_attach = server_opts.on_attach
           server_opts.on_attach = function(client, bufnr)
             if original_on_attach then
-              original_on_attach(client, bufnr)
+              pcall(original_on_attach, client, bufnr)
             end
-            for name, spec in pairs(cmd_defs) do
-              if type(spec) == "table" and type(spec[1]) == "function" then
-                vim.api.nvim_buf_create_user_command(bufnr, name, spec[1], {
-                  desc = spec.description or ("LSP Command: " .. name),
-                })
+            for name, spec in pairs(commands) do
+              local fn, desc
+              if type(spec) == "function" then
+                fn = spec
+              elseif type(spec) == "table" and type(spec.fn) == "function" then
+                fn = spec.fn
+                desc = spec.desc
+              elseif type(spec) == "table" and type(spec[1]) == "function" then
+                fn = spec[1]
+                desc = spec.description or spec.desc
+              end
+              if type(fn) == "function" then
+                vim.api.nvim_buf_create_user_command(bufnr, name, function()
+                  -- protect execution to avoid crashing on user command
+                  local ok, err = pcall(fn)
+                  if not ok then
+                    vim.notify(("Command %s failed: %s"):format(name, tostring(err)), vim.log.levels.ERROR)
+                  end
+                end, { desc = desc or ("LSP command: " .. name) })
               end
             end
           end
-          server_opts.commands = nil -- Remove non-native key
+          -- remove commands from setup table so lspconfig doesn't see a non-native key
+          server_opts.commands = nil
         end
 
-        lspconfig[server_name].setup(server_opts)
+        -- Finally, call lspconfig setup for the server
+        local ok_setup, err = pcall(function()
+          lspconfig[server_name].setup(server_opts)
+        end)
+        if not ok_setup then
+          warn(("Failed to setup LSP %s: %s"):format(server_name, tostring(err)))
+        end
       end,
     },
   })
 
-  -- NOTE: LspAttach autocmd is handled in lua/plugins/lsp.lua
-  -- No need for duplicate handler here - on_attach is already called via lsp.lua
-end -- end M.config
+  info("Mason LSP setup complete")
+end
 
--- ╭────────────────────────────────────╮
--- │ Plugin Specification Return         │
--- ╰────────────────────────────────────╯
--- Purpose: Export lazy.nvim plugin spec so this file alone controls Mason ecosystem.
--- Responsibilities:
---   • Declare dependencies.
---   • Define load triggers.
---   • Bind config function.
+-- Plugin spec return for lazy.nvim (this file acts as the plugin descriptor)
 return {
   "williamboman/mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonToolsInstall", "MasonUpdate" },
@@ -314,7 +262,7 @@ return {
   dependencies = {
     "williamboman/mason-lspconfig.nvim",
     "WhoIsSethDaniel/mason-tool-installer.nvim",
-    -- "blink.cmp" -- Ensure your completion engine is installed if referenced.
+    -- add your completion engine here if you want to advertise it (e.g. "hrsh7th/nvim-cmp")
   },
   config = M.config,
 }
