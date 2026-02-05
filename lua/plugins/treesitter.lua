@@ -21,25 +21,22 @@ return { -- Highlight, edit, and navigate code
     require('nvim-treesitter.config').setup {
       -- Add languages to be installed here that you want installed for treesitter
       ensure_installed = {
-        'lua',
-        'python',
-        'c',
-        'cpp',
-        'javascript',
-        'typescript',
-        'vimdoc',
-        'vim',
-        'regex',
-        'terraform',
-        'sql',
-        'dockerfile',
-        'toml',
-        'json',
-        'java',
-        'groovy',
-        'go',
-        'gitignore',
-        'graphql',
+        -- Primary languages
+        "c",
+        "cpp",
+        "python",
+        "rust",
+        "lua",
+        "java",
+        
+        -- Essential
+        "vim",
+        "vimdoc",
+        "bash",
+        
+        -- Documentation
+        "markdown",
+        "markdown_inline",
         'yaml',
         'make',
         'cmake',

@@ -190,25 +190,37 @@ function M.config()
       },
     },
 
+
     pyright = {},
     clangd = require("plugins.lsp.ft.clang"),
-    jsonls = {},
-    sqls = {},
-    yamlls = {},
+    rust_analyzer = {},
+    jdtls = {},
     bashls = {},
-    marksman = {},
+
+
+
+
+
+
   }
 
   -- ╭────────────────────────────────────╮
-  -- │ Extra Tool Definitions             │
-  -- ╰────────────────────────────────────╯
-  -- Purpose: List non-LSP developer tools to install via Mason.
-  -- Responsibilities:
-  --   • Ensure availability of formatters / linters / code quality executables.
+
   local extra_tools = {
-    "stylua",
     "clang-format",
-    "markdownlint",
+    "black",
+    "isort",
+    "ruff",
+    "stylua",
+  }
+
+
+
+
+
+
+
+
     "black",
     "isort",
     "flake8",
