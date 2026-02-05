@@ -47,8 +47,7 @@ return { -- Highlight, edit, and navigate code
         'css',
         'html',
       },
-      -- Autoinstall languages that are not installed
-      auto_install = false, -- Changed to false to prevent startup stalls
+      -- Already set above -- Changed to false to prevent startup stalls
       sync_install = false,
       ignore_install = { "phpdoc", "haskell" },
       modules = {},
