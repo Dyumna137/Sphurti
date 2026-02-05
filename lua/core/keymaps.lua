@@ -151,3 +151,16 @@ keymap('n', '<leader>nt', function()
 end, { noremap = true, desc = 'Note: Insert Time' })
 
 keymap('n', '<leader>nn', ':enew | setlocal buftype=nofile bufhidden=wipe noswapfile<CR>', { noremap = true, silent = true, desc = 'Note: New Scratch' })
+
+-- ══════════════════════════════════════════════════════════════
+-- FILE EXPLORER (Netrw - Built-in)
+-- ══════════════════════════════════════════════════════════════
+vim.keymap.set('n', '<leader>e', ':Lexplore<CR>', { desc = 'Toggle [E]xplorer (left side)', noremap = true, silent = true })
+vim.keymap.set('n', '<leader>E', ':Explore<CR>', { desc = 'Open [E]xplorer (current window)', noremap = true, silent = true })
+
+-- Netrw settings for better UX
+vim.g.netrw_banner = 0         -- Hide banner (press I to toggle)
+vim.g.netrw_liststyle = 3      -- Tree view
+vim.g.netrw_browse_split = 0   -- Open in same window
+vim.g.netrw_altv = 1           -- Open splits to the right
+vim.g.netrw_winsize = 25       -- 25% width
