@@ -62,11 +62,12 @@ return {
       -----------------------------------------------------------------------
       -- Define once, reused by every LSP server.
       -- Using ASCII keeps compatibility with all fonts.
+      -- IMPORTANT: Neovim 0.9.5 requires signs to be max 2 chars (E239 error if 3+)
       local diag_icons = {
-        Error = "[E]",
-        Warn  = "[W]",
-        Hint  = "[H]",
-        Info  = "[I]",
+        Error = "E ",
+        Warn  = "W ",
+        Hint  = "H ",
+        Info  = "I ",
       }
 
       for severity, icon in pairs(diag_icons) do
