@@ -46,7 +46,8 @@ function M.config()
 		add_if_exists(sources, formatting.black.with({ extra_args = { "--fast" } }))
 	end
 	add_if_exists(sources, formatting.isort)
-	add_if_exists(sources, diagnostics.flake8)
+	-- Note: flake8 removed - not installed, using ruff_lsp instead
+	-- add_if_exists(sources, diagnostics.flake8)
 
 	-- Lua
 	add_if_exists(sources, formatting.stylua)
