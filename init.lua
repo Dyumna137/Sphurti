@@ -9,7 +9,8 @@
 -- PERFORMANCE: Enable Lua module caching
 -- ═══════════════════════════════════════════════════════════════
 vim.loader.enable()
-
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
 -- ═══════════════════════════════════════════════════════════════
 -- PLATFORM: Windows-specific shell configuration
 -- ═══════════════════════════════════════════════════════════════
@@ -58,95 +59,98 @@ vim.opt.rtp:prepend(lazypath)
 -- Commands: :Lazy (status), :Lazy update (update all)
 -- ═══════════════════════════════════════════════════════════════
 require("lazy").setup({
+	git = {
+		timeout = 600,
+	},
 
 	-- ─────────────────────────────────────────────────────────────
 	-- CORE UTILITIES
 	-- ─────────────────────────────────────────────────────────────
-	{ "famiu/bufdelete.nvim", cmd = "Bdelete" },  -- Delete buffers safely
-	require("plugins.telescope"),                  -- Fuzzy finder
+	{ "famiu/bufdelete.nvim", cmd = "Bdelete" }, -- Delete buffers safely
+	require("plugins.telescope"), -- Fuzzy finder
 
 	-- ─────────────────────────────────────────────────────────────
 	-- UI & APPEARANCE
 	-- ─────────────────────────────────────────────────────────────
-	require("plugins.colortheme"),                 -- Color scheme
-	require("plugins.lualine"),                    -- Status line
+	require("plugins.colortheme"), -- Color scheme
+	require("plugins.lualine"), -- Status line
 
 	-- ─────────────────────────────────────────────────────────────
 	-- CODE INTELLIGENCE
 	-- ─────────────────────────────────────────────────────────────
-	require("plugins.treesitter"),                 -- Syntax highlighting
-	require("plugins.lsp"),                        -- Language servers
-	require("plugins.autocompletion"),             -- Code completion
-	require("plugins.lsp_signature"),              -- Function signatures
-	require("plugins.autopairs"),                  -- Auto-close brackets
+	require("plugins.treesitter"), -- Syntax highlighting
+	require("plugins.lsp"), -- Language servers
+	require("plugins.autocompletion"), -- Code completion
+	require("plugins.lsp_signature"), -- Function signatures
+	require("plugins.autopairs"), -- Auto-close brackets
 
 	-- ─────────────────────────────────────────────────────────────
 	-- CODE QUALITY
 	-- ─────────────────────────────────────────────────────────────
-	require("plugins.none-ls"),                    -- Formatting & linting
+	require("plugins.none-ls"), -- Formatting & linting
 
 	-- ─────────────────────────────────────────────────────────────
 	-- DEVELOPMENT TOOLS
 	-- ─────────────────────────────────────────────────────────────
-	require("plugins.debug"),                      -- Debugger (DAP)
-	require("plugins.gitsigns"),                   -- Git integration
-	
+	require("plugins.debug"), -- Debugger (DAP)
+	require("plugins.gitsigns"), -- Git integration
+
 	-- ─────────────────────────────────────────────────────────────
 	-- EXTRAS
 	-- ─────────────────────────────────────────────────────────────
-	require("plugins.misc"),                       -- Small utilities
+	require("plugins.misc"), -- Small utilities
 }, {
 	-- ═══════════════════════════════════════════════════════════════
 	-- LAZY.NVIM OPTIONS
 	-- ═══════════════════════════════════════════════════════════════
-	
+
 	defaults = {
-		lazy = true,  -- Lazy-load by default for fast startup
+		lazy = true, -- Lazy-load by default for fast startup
 	},
-	
+
 	-- Performance optimizations
 	performance = {
 		cache = { enabled = true },
 		rtp = {
 			-- Disable unused built-in plugins
 			disabled_plugins = {
-				"netrwPlugin",  -- File explorer (we use oil.nvim)
-				"gzip",         -- Gzip support
-				"zipPlugin",    -- Zip support  
-				"tarPlugin",    -- Tar support
-				"tohtml",       -- HTML export
-				"tutor",        -- Built-in tutorial
-				"matchit",      -- Extended % matching
-				"matchparen",   -- Bracket highlighting
+				"netrwPlugin", -- File explorer (we use oil.nvim)
+				"gzip", -- Gzip support
+				"zipPlugin", -- Zip support
+				"tarPlugin", -- Tar support
+				"tohtml", -- HTML export
+				"tutor", -- Built-in tutorial
+				"matchit", -- Extended % matching
+				"matchparen", -- Bracket highlighting
 			},
 		},
 	},
-	
+
 	-- Auto-check for updates (silently)
 	checker = {
 		enabled = true,
 		notify = false,
 	},
-	
+
 	-- ═══════════════════════════════════════════════════════════════
 	-- UI: Minimalist icons (simple & clear)
 	-- ═══════════════════════════════════════════════════════════════
 	ui = {
 		icons = {
-			cmd = "[cmd]",      -- Commands
-			config = "[cfg]",   -- Configuration
-			event = "[evt]",    -- Events
-			ft = "[ft]",        -- Filetypes
-			init = "[ini]",     -- Initialization
-			keys = "[key]",     -- Keymaps
-			plugin = "[plg]",   -- Plugins
-			runtime = "[run]",  -- Runtime
-			require = "[req]",  -- Requirements
-			source = "[src]",   -- Source
-			start = "[>>>]",    -- Started
-			task = "[tsk]",     -- Tasks
-			lazy = "[zzz]",     -- Lazy-loaded
-			loaded = "[ok]",    -- Loaded
+			cmd = "[cmd]", -- Commands
+			config = "[cfg]", -- Configuration
+			event = "[evt]", -- Events
+			ft = "[ft]", -- Filetypes
+			init = "[ini]", -- Initialization
+			keys = "[key]", -- Keymaps
+			plugin = "[plg]", -- Plugins
+			runtime = "[run]", -- Runtime
+			require = "[req]", -- Requirements
+			source = "[src]", -- Source
+			start = "[>>>]", -- Started
+			task = "[tsk]", -- Tasks
+			lazy = "[zzz]", -- Lazy-loaded
+			loaded = "[ok]", -- Loaded
 			not_loaded = "[ ]", -- Not loaded
 		},
 	},
