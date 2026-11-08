@@ -1,6 +1,5 @@
 return { -- Highlight, edit, and navigate code
 	"nvim-treesitter/nvim-treesitter",
-	cmd = { "TSUpdate", "TSInstall" },
 	build = ":TSUpdate",
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter-textobjects",
@@ -17,7 +16,7 @@ return { -- Highlight, edit, and navigate code
 		})
 
 		---@diagnostic disable-next-line: missing-fields
-		require("nvim-treesitter.configs").setup({
+		require("nvim-treesitter").setup({
 			-- Add languages to be installed here that you want installed for treesitter
 			ensure_installed = {
 				-- Primary languages
