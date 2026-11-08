@@ -134,6 +134,7 @@ Leader key is `<Space>`.
 | Keymap | Action | Description |
 |--------|--------|-------------|
 | `<leader>sf` | Find files | Search project files |
+| `<leader>gf` | Git files | Search tracked Git files |
 | `<leader>fg` | Live grep | Search text in files |
 | `<leader>fb` | Find buffers | List open buffers |
 | `<leader>e` | File explorer | Open built-in file browser |
@@ -149,6 +150,16 @@ Leader key is `<Space>`.
 | `<leader>rn` | Rename symbol | Rename across project |
 | `[d` | Previous diagnostic | Jump to previous error |
 | `]d` | Next diagnostic | Jump to next error |
+| `<leader>ld` | Diagnostics report | Show LSP, root, and buffer diagnostic state |
+
+### Git
+
+| Keymap | Action |
+|--------|--------|
+| `<leader>gs` | Fugitive Git status |
+| `<leader>gd` | Diff current file |
+| `<leader>gl` | Git log |
+| `<leader>gb` | Git blame |
 
 ### Diagnostics
 

@@ -5,6 +5,7 @@ local required_commands = {
 	"EmbeddedFlash",
 	"EmbeddedMonitor",
 	"EmbeddedDebug",
+	"DiagnosticsReport",
 }
 
 for _, command in ipairs(required_commands) do
@@ -12,4 +13,7 @@ for _, command in ipairs(required_commands) do
 end
 
 assert(pcall(require, "core.embedded"), "embedded workflow module failed to load")
+assert(pcall(require, "core.git"), "Git module failed to load")
+assert(pcall(require, "core.diagnostics"), "diagnostics module failed to load")
+assert(vim.fn.executable("git") == 1, "git is not available on PATH")
 print("SMOKE_TEST_OK")

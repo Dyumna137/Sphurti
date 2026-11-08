@@ -8,7 +8,7 @@ return {
         event = { "BufReadPost", "BufNewFile" },
         cond = function()
             -- Only load in git repositories
-            return vim.fn.isdirectory(".git") == 1 or vim.fn.finddir(".git", ".;") ~= ""
+            return require("core.git").root() ~= nil
         end,
         opts = {
             signs                        = {

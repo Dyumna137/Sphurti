@@ -5,6 +5,16 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
 		{ "<leader>sh", "<cmd>Telescope help_tags<cr>", desc = "[S]earch [H]elp" },
 		{ "<leader>sk", "<cmd>Telescope keymaps<cr>", desc = "[S]earch [K]eymaps" },
 		{ "<leader>sf", "<cmd>Telescope find_files<cr>", desc = "[S]earch [F]iles" },
+		{
+			"<leader>gf",
+			function()
+				local root = require("core.git").require_root()
+				if root then
+					require("telescope.builtin").git_files({ cwd = root })
+				end
+			end,
+			desc = "[G]it [F]iles",
+		},
 		{ "<leader>ss", "<cmd>Telescope builtin<cr>", desc = "[S]earch [S]elect Telescope" },
 		{ "<leader>sw", "<cmd>Telescope grep_string<cr>", desc = "[S]earch current [W]ord" },
 		{ "<leader>sg", "<cmd>Telescope live_grep<cr>", desc = "[S]earch by [G]rep" },

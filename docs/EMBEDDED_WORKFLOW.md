@@ -37,10 +37,10 @@ flash or debug action succeeded.
 - USB serial drivers and a serial monitor
 - OpenOCD/GDB when hardware debugging is required
 
-The current host already has Neovim 0.11.6, LLVM `clang`/`clangd`, CMake, Make,
-and Git. ARM GCC/GDB, OpenOCD, ESP-IDF, esptool, PlatformIO, and `fd` were not
-available during the audit. Install those separately when the relevant board
-workflow is needed.
+The current host has Neovim 0.11.6, LLVM `clang`/`clangd`, CMake, Make, Git,
+`fd`, and Python with `pyserial` installed. ARM GCC/GDB, OpenOCD, ESP-IDF,
+esptool, and PlatformIO still need to be installed separately when the
+relevant board workflow is needed.
 
 ## Before and after
 
@@ -61,3 +61,9 @@ Hardware-specific debugging still needs target configuration: MCU type,
 interface (ST-Link/J-Link/USB-JTAG), ELF path, reset strategy, and GDB server
 port. Those details belong in each firmware project rather than being guessed
 globally by the Neovim configuration.
+
+## Git and diagnostics
+
+Use `<leader>gf` for tracked Git files and `<leader>gs` for Fugitive status.
+Use `<leader>ld` or `:DiagnosticsReport` to see the current project root, LSP
+clients, buffer diagnostics, and whether `compile_commands.json` is missing.
