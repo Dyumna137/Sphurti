@@ -25,7 +25,7 @@ A lightweight, fast Neovim setup optimized for C/C++ and embedded systems develo
 This configuration focuses on C/C++ and embedded systems development with an emphasis on:
 
 - Fast startup time (under 50ms)
-- Minimal bloat (only 24 plugins)
+- Focused plugin set for editing, diagnostics, and debugging
 - Proper LSP integration
 - Smart lazy-loading
 - No Nerd Font dependency (uses minimalist text icons)
@@ -39,14 +39,14 @@ The config started as a way to move away from VS Code's memory usage and has evo
 ### Core Functionality
 
 - **Plugin Management:** lazy.nvim for fast, lazy-loaded plugins
-- **File Explorer:** oil.nvim for intuitive file navigation
+- **File Explorer:** Built-in netrw navigation with no extra dependency
 - **Fuzzy Finding:** Telescope with smart git-aware file searching
 - **Syntax:** Treesitter for accurate syntax highlighting
 
 ### Language Support
 
 - **LSP Integration:** Full language server support via nvim-lspconfig and Mason
-- **Autocompletion:** Fast completion with blink.cmp
+- **Autocompletion:** Fast completion with nvim-cmp and LuaSnip
 - **Diagnostics:** Real-time error checking with trouble.nvim
 - **Formatting:** Auto-formatting with none-ls (null-ls successor)
 
@@ -133,11 +133,10 @@ Leader key is `<Space>`.
 
 | Keymap | Action | Description |
 |--------|--------|-------------|
-| `<leader>ff` | Find files | Smart git-aware file finding |
-| `<leader>fa` | Find all files | Search all files (ignores .gitignore) |
+| `<leader>sf` | Find files | Search project files |
 | `<leader>fg` | Live grep | Search text in files |
 | `<leader>fb` | Find buffers | List open buffers |
-| `<leader>e` | File explorer | Open oil.nvim file browser |
+| `<leader>e` | File explorer | Open built-in file browser |
 
 ### LSP Operations
 
@@ -169,6 +168,20 @@ Leader key is `<Space>`.
 | `<F9>` | Toggle breakpoint | Set/remove breakpoint |
 | `<F10>` | Step over | Debug step over |
 | `<F11>` | Step into | Debug step into |
+
+### Embedded Workflow
+
+These commands detect the current project and use the first supported workflow:
+
+| Keymap | Command | Action |
+|--------|---------|--------|
+| `<leader>eb` | `:EmbeddedBuild` | Build with PlatformIO, ESP-IDF, CMake, or Make |
+| `<leader>ef` | `:EmbeddedFlash` | Flash with PlatformIO, ESP-IDF, or a project flash script |
+| `<leader>em` | `:EmbeddedMonitor` | Open PlatformIO, ESP-IDF, or pyserial monitor |
+| `<leader>ed` | `:EmbeddedDebug` | Check embedded debugger prerequisites |
+
+The commands do not install toolchains automatically. If a required executable is
+missing, Neovim reports the exact prerequisite instead of failing silently.
 
 ### Terminal
 
@@ -202,7 +215,7 @@ Leader key is `<Space>`.
 
 ### Core Utilities
 - **lazy.nvim** - Plugin manager
-- **oil.nvim** - File explorer
+- **netrw** - Built-in file explorer
 - **telescope.nvim** - Fuzzy finder
 - **bufdelete.nvim** - Safe buffer deletion
 
@@ -216,7 +229,7 @@ Leader key is `<Space>`.
 - **nvim-treesitter** - Syntax highlighting
 - **nvim-lspconfig** - LSP client
 - **mason.nvim** - LSP installer
-- **blink.cmp** - Autocompletion
+- **nvim-cmp** - Autocompletion
 - **lsp_signature.nvim** - Function signatures
 - **nvim-autopairs** - Auto-close brackets
 
@@ -374,8 +387,7 @@ which rg
 ```
 
 **In git repo, use:**
-- `<leader>ff` for git files (respects .gitignore)
-- `<leader>fa` for all files (ignores .gitignore)
+- `<leader>sf` for project files (uses `fd` when available and Git fallback otherwise)
 
 ### Slow Startup
 
@@ -419,7 +431,7 @@ export TERM=xterm-256color
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 **Quick guidelines:**
 - Keep it minimal (no unnecessary plugins)

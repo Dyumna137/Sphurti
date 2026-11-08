@@ -123,6 +123,7 @@ end
 -- ═══════════════════════════════════════════════════════════════════
 -- Build System Integration (C/C++/Embedded)
 -- ═══════════════════════════════════════════════════════════════════
+require("core.embedded").setup()
 keymap('n', '<leader>mm', ':make<CR>', { noremap = true, desc = 'Make: Build (async)' })
 keymap('n', '<leader>mc', ':make clean<CR>', { noremap = true, desc = 'Make: Clean' })
 keymap('n', '<leader>mr', ':make run<CR>', { noremap = true, desc = 'Make: Run' })
@@ -155,8 +156,8 @@ keymap('n', '<leader>nn', ':enew | setlocal buftype=nofile bufhidden=wipe noswap
 -- ══════════════════════════════════════════════════════════════
 -- FILE EXPLORER (Netrw - Built-in)
 -- ══════════════════════════════════════════════════════════════
-vim.keymap.set('n', '<leader>e', ':Lexplore<CR>', { desc = 'Toggle [E]xplorer (left side)', noremap = true, silent = true })
-vim.keymap.set('n', '<leader>E', ':Explore<CR>', { desc = 'Open [E]xplorer (current window)', noremap = true, silent = true })
+vim.keymap.set('n', '<leader>e', ':Explore<CR>', { desc = 'Open [E]xplorer', noremap = true, silent = true })
+vim.keymap.set('n', '<leader>E', ':Lexplore<CR>', { desc = 'Toggle [E]xplorer (left side)', noremap = true, silent = true })
 
 -- Netrw settings for better UX
 vim.g.netrw_banner = 0         -- Hide banner (press I to toggle)
@@ -164,3 +165,8 @@ vim.g.netrw_liststyle = 3      -- Tree view
 vim.g.netrw_browse_split = 0   -- Open in same window
 vim.g.netrw_altv = 1           -- Open splits to the right
 vim.g.netrw_winsize = 25       -- 25% width
+
+keymap('n', '<leader>eb', '<cmd>EmbeddedBuild<CR>', { noremap = true, silent = true, desc = 'Embedded: Build' })
+keymap('n', '<leader>ef', '<cmd>EmbeddedFlash<CR>', { noremap = true, silent = true, desc = 'Embedded: Flash' })
+keymap('n', '<leader>em', '<cmd>EmbeddedMonitor<CR>', { noremap = true, silent = true, desc = 'Embedded: Serial monitor' })
+keymap('n', '<leader>ed', '<cmd>EmbeddedDebug<CR>', { noremap = true, silent = true, desc = 'Embedded: Check debug tools' })

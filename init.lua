@@ -9,8 +9,6 @@
 -- PERFORMANCE: Enable Lua module caching
 -- ═══════════════════════════════════════════════════════════════
 vim.loader.enable()
-vim.g.loaded_netrw = 1
-vim.g.loaded_netrwPlugin = 1
 -- ═══════════════════════════════════════════════════════════════
 -- PLATFORM: Windows-specific shell configuration
 -- ═══════════════════════════════════════════════════════════════
@@ -114,7 +112,6 @@ require("lazy").setup({
 		rtp = {
 			-- Disable unused built-in plugins
 			disabled_plugins = {
-				"netrwPlugin", -- File explorer (we use oil.nvim)
 				"gzip", -- Gzip support
 				"zipPlugin", -- Zip support
 				"tarPlugin", -- Tar support
