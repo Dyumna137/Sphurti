@@ -183,6 +183,12 @@ These commands detect the current project and use the first supported workflow:
 The commands do not install toolchains automatically. If a required executable is
 missing, Neovim reports the exact prerequisite instead of failing silently.
 
+Run the small configuration smoke test from PowerShell:
+
+```powershell
+nvim --headless -u init.lua -l tests/smoke.lua
+```
+
 ### Terminal
 
 | Keymap | Action | Description |
