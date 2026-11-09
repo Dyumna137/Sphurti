@@ -9,6 +9,11 @@ program hardware by itself.
 
 ## Current workflow
 
+For a project-local PowerShell environment, dot-source
+[EMBEDDED_ENVIRONMENT.md](EMBEDDED_ENVIRONMENT.md) before launching Neovim.
+It exposes PlatformIO, ARM GDB, and OpenOCD for that terminal without
+installing or changing tools from inside Neovim.
+
 From a project root, the following mappings are available:
 
 | Mapping | Command | Detection order |
