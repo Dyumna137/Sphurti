@@ -18,6 +18,8 @@ function M.setup()
 	vim.keymap.set("n", "<leader>gd", "<cmd>Gdiffsplit<CR>", { desc = "Git: Diff" })
 	vim.keymap.set("n", "<leader>gl", "<cmd>Git log --oneline --decorate --graph<CR>", { desc = "Git: Log" })
 	vim.keymap.set("n", "<leader>gb", "<cmd>Git blame<CR>", { desc = "Git: Blame" })
+	vim.keymap.set("n", "<leader>gB", "<cmd>Git branch -vv<CR>", { desc = "Git: Branches" })
+	vim.keymap.set("n", "<leader>gp", "<cmd>Git status<CR>", { desc = "Git: Pipeline/status" })
 end
 
 return M

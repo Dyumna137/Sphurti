@@ -97,7 +97,7 @@ Generated: 2026-02-05 08:47 UTC
 - [x] No platform-specific dependencies
 - [x] Git operations cross-platform safe
 
-### ✅ Language Support (Minimal)
+### ✅ Language Support
 **LSP Servers (6):**
 - clangd (C/C++)
 - pyright (Python)
@@ -106,10 +106,12 @@ Generated: 2026-02-05 08:47 UTC
 - jdtls (Java)
 - bashls (Shell)
 
-**Treesitter Parsers (13):**
-- c, cpp, python, rust, lua, java
-- vim, vimdoc, bash, make, cmake
-- markdown, markdown_inline
+**Treesitter Parsers (4):**
+- c, cpp, make, cmake
+
+Python, Rust, Java, Bash, and Lua language intelligence remains available
+through their LSP servers; Treesitter is intentionally restricted to the
+embedded C/C++ workflow for startup performance.
 
 **NO web languages** (TypeScript, HTML, CSS, JSON, YAML removed)
 

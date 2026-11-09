@@ -52,7 +52,6 @@ return {
     -- These are "data only" plugin dependencies.
     dependencies = {
       { import = "plugins.lsp.mason" },         -- Mason auto server setup
-      { "mfussenegger/nvim-jdtls", ft = "java" } -- Java LSP (lazy loaded)
     },
 
     -- All executable logic must live here.

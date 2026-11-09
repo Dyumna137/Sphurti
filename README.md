@@ -55,13 +55,12 @@ The config started as a way to move away from VS Code's memory usage and has evo
 - **Debugger:** nvim-dap with UI for visual debugging
 - **Git Integration:** Inline git changes with gitsigns
 - **Terminal:** Built-in project/file terminal split with no extra plugin
-- **Live Preview:** HTML and Markdown preview support
+- **Substitution preview:** Neovim shows an incremental split preview for substitutions
 
 ### UI Components
 
 - **Colorscheme:** Kanagawa (soft colors, easy on eyes)
 - **Statusline:** lualine with diagnostic and git info
-- **Bufferline:** Tab-like buffer management
 - **Icons:** Minimalist text icons (works without Nerd Fonts)
 
 ---
@@ -72,7 +71,7 @@ The config started as a way to move away from VS Code's memory usage and has evo
 
 **Required:**
 ```bash
-neovim >= 0.9.0
+neovim >= 0.11.3
 git
 gcc or clang (for treesitter compilation)
 ```
@@ -116,7 +115,9 @@ sudo apt install neovim git build-essential ripgrep fd-find nodejs npm
    - `clangd` for C/C++
    - `lua_ls` for Lua
    - `pyright` for Python
-   - Others as needed
+   - `rust_analyzer` for Rust
+   - `jdtls` for Java
+   - `bashls` for Bash
 
 5. **Verify installation:**
    ```vim
@@ -144,14 +145,14 @@ Leader key is `<Space>`.
 
 | Keymap | Action | Description |
 |--------|--------|-------------|
-| `gd` | Go to definition | Jump to function/variable definition |
-| `gr` | Go to references | Show all references |
-| `K` | Hover documentation | Show symbol info |
-| `<leader>ca` | Code actions | Show available code fixes |
-| `<leader>rn` | Rename symbol | Rename across project |
-| `[d` | Previous diagnostic | Jump to previous error |
-| `]d` | Next diagnostic | Jump to next error |
+| `<leader>F` | Format buffer | Format through an attached formatting client |
+| `<leader>tf` | Toggle format on save | Toggle the buffer-local autoformat setting |
 | `<leader>ld` | Diagnostics report | Show LSP, root, and buffer diagnostic state |
+
+The configuration registers the three mappings above when a suitable LSP
+client attaches. Neovim and the LSP client may also provide their own default
+mappings; use `:map <buffer>` in an attached buffer to inspect the effective
+set rather than treating generic LSP shortcuts as configuration-owned.
 
 ### Git
 
@@ -178,9 +179,11 @@ Leader key is `<Space>`.
 | `<leader>mm` | Make | Run make command |
 | `<leader>mc` | Make clean | Run make clean |
 | `<F5>` | Start/Continue | Start or continue debugging |
-| `<F9>` | Toggle breakpoint | Set/remove breakpoint |
-| `<F10>` | Step over | Debug step over |
-| `<F11>` | Step into | Debug step into |
+| `<F1>` | Step into | Debug step into |
+| `<F2>` | Step over | Debug step over |
+| `<F3>` | Step out | Debug step out |
+| `<leader>b` | Toggle breakpoint | Set or remove a breakpoint |
+| `<leader>B` | Conditional breakpoint | Prompt for a breakpoint condition |
 
 ### Embedded Workflow
 
@@ -259,6 +262,12 @@ nvim --headless -u init.lua -l tests/smoke.lua
 - **nvim-dap-ui** - Debug UI
 - **gitsigns.nvim** - Git integration
 
+### Supported language servers
+
+The active Mason configuration preserves servers for Lua, C/C++, Python, Rust,
+Java, and Bash. They are configured when Mason/LSP loads and attach only when
+you open a matching filetype.
+
 ---
 
 ## Configuration Structure
@@ -274,7 +283,6 @@ nvim --headless -u init.lua -l tests/smoke.lua
 │       ├── lsp.lua         # LSP configuration
 │       ├── lsp/
 │       │   ├── mason.lua   # LSP server installation
-│       │   ├── servers.lua # Server-specific settings
 │       │   └── on_attach.lua # LSP keymaps
 │       ├── autocompletion.lua
 │       ├── treesitter.lua
@@ -322,7 +330,7 @@ Popular alternatives:
 
 2. Search and install your LSP server
 
-3. Add to `lua/plugins/lsp/servers.lua`:
+3. Add to the `servers` table in `lua/plugins/lsp/mason.lua`:
    ```lua
    ["rust_analyzer"] = {},  -- Example for Rust
    ```

@@ -1,49 +1,25 @@
 return { -- Highlight, edit, and navigate code
 	"nvim-treesitter/nvim-treesitter",
-	build = ":TSUpdate",
+	ft = { "lua", "c", "cpp", "python", "rust", "java", "sh", "bash", "make", "cmake" },
+build = ":TSUpdate",
 	dependencies = {
 		"nvim-treesitter/nvim-treesitter-textobjects",
 	},
 	config = function()
-		-- Register additional file extensions BEFORE setup
-		vim.filetype.add({
-			extension = {
-				tf = "terraform",
-				tfvars = "terraform",
-				pipeline = "groovy",
-				multibranch = "groovy",
-			},
-		})
-
 		---@diagnostic disable-next-line: missing-fields
 		require("nvim-treesitter").setup({
 			-- Add languages to be installed here that you want installed for treesitter
 			ensure_installed = {
 				-- Primary languages
+				"lua",
 				"c",
 				"cpp",
 				"python",
 				"rust",
-				"lua",
 				"java",
-
-				-- Essential
-				"vim",
-				"vimdoc",
 				"bash",
-
-				-- Documentation
-				"markdown",
-				"markdown_inline",
-				"yaml",
 				"make",
 				"cmake",
-				"markdown",
-				"markdown_inline",
-				"bash",
-				"tsx",
-				"css",
-				"html",
 			},
 			-- Already set above -- Changed to false to prevent startup stalls
 			sync_install = false,

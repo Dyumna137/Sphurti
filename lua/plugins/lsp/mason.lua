@@ -1,5 +1,6 @@
 -- Mason LSP setup - runs AFTER lspconfig is loaded
 return {
+{
 	"williamboman/mason.nvim",
 	dependencies = {
 		"neovim/nvim-lspconfig",
@@ -23,8 +24,8 @@ return {
 					},
 				},
 			},
-			pyright = {},
 			clangd = {},
+			pyright = {},
 			rust_analyzer = {},
 			jdtls = {},
 			bashls = {},
@@ -62,11 +63,10 @@ return {
 			ensure_installed = {
 				"stylua",
 				"clang-format",
-				"black",
-				"isort",
 			},
 		})
 
 		vim.notify("[mason] LSP setup complete", vim.log.levels.INFO)
 	end,
+},
 }

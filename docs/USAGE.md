@@ -45,12 +45,37 @@ inspect it before opening.
 | `<Space>gd` | Diff current file |
 | `<Space>gl` | Git log |
 | `<Space>gb` | Git blame |
+| `<Space>gB` | Branch list with upstream tracking |
+| `<Space>gp` | Git status/pipeline view |
 | `<Space>hs` | Stage hunk |
 | `<Space>hr` | Reset hunk |
 | `<Space>hp` | Preview hunk |
 
 Fugitive opens its status buffer. In that buffer, press `?` to see available
 actions.
+
+The statusline shows the current branch. Use `<Space>gB` to inspect local and
+remote branch tracking, and `<Space>gp` to inspect staged, unstaged, and
+untracked changes. CI pipeline results are provided by the repository host;
+from the project root, use `gh run list` in the terminal when GitHub Actions
+checks are needed.
+
+## Language server workflow
+
+The active language servers are preserved for:
+
+| Filetype | Server |
+|---|---|
+| C/C++ | `clangd` |
+| Python | `pyright` |
+| Rust | `rust_analyzer` |
+| Java | `jdtls` |
+| Bash (`sh`) | `bashls` |
+| Lua/Neovim config | `lua_ls` |
+
+Use `:LspInfo` to see which server is attached to the current buffer. Mason
+installs configured servers with `:Mason`; it does not hide servers that are
+not currently attached.
 
 ## Diagnostics workflow
 

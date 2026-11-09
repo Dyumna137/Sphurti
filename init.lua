@@ -123,9 +123,9 @@ require("lazy").setup({
 		},
 	},
 
-	-- Auto-check for updates (silently)
+	-- Check for updates manually with :Lazy check
 	checker = {
-		enabled = true,
+		enabled = false,
 		notify = false,
 	},
 

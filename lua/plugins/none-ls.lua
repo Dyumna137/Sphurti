@@ -41,19 +41,8 @@ function M.config()
 
 	local sources = {}
 
-	-- Python
-	if formatting.black then
-		add_if_exists(sources, formatting.black.with({ extra_args = { "--fast" } }))
-	end
-	add_if_exists(sources, formatting.isort)
-	-- Note: flake8 removed - not installed, using ruff_lsp instead
-	-- add_if_exists(sources, diagnostics.flake8)
-
 	-- Lua
 	add_if_exists(sources, formatting.stylua)
-
-	-- JS/TS
-	add_if_exists(sources, formatting.prettier)
 
 	-- C/C++
 	add_if_exists(sources, formatting.clang_format)
