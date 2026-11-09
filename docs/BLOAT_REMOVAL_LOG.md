@@ -600,6 +600,49 @@ Plugin Defaults:
 └── "Just works"
 
 Lesson: Only customize when defaults insufficient!
+
+---
+
+## Current Configuration Recheck — November 2026
+
+The original entries above are historical audit notes. The current repository
+no longer contains every file or plugin named in that audit, so the numbers
+above should not be used as current performance claims.
+
+### Current measured state
+
+| Metric | Current result |
+|---|---:|
+| Startup time | 47.6 ms average across five Windows headless runs |
+| Plugin specifications | 37 |
+| Initially loaded plugins | 2 |
+| Lua configuration | 1,932 lines |
+| Broken local Markdown links | 0 |
+| Smoke test | Passed: `SMOKE_TEST_OK` |
+
+### Current bloat assessment
+
+- The configuration is fast enough for daily C/C++ and embedded work.
+- Lazy loading is effective: only the plugin manager and colorscheme load at
+  startup in the benchmark.
+- The specification count is larger than the old “24 plugins” claim because
+  current completion, LSP, DAP, Git, diagnostics, and embedded workflows have
+  explicit dependencies.
+- No immediate plugin removal is recommended. Removing Telescope, LSP, DAP,
+  Git, or diagnostics dependencies would reduce features rather than remove
+  accidental bloat.
+- Historical references to `oil.nvim`, `bufferline.nvim`, `indent-blankline`,
+  `nvim-preview`, `sqls`, and the old floating-terminal implementation are
+  stale for the current configuration.
+
+### Benchmark method
+
+```powershell
+nvim --headless -u init.lua --startuptime startup.log "+qa!"
+```
+
+The reported value is the final `NVIM STARTED` timestamp. Five runs were used
+to avoid judging the configuration from one cold or unusually slow launch.
 ```
 
 #### 3. **Less Code = Fewer Bugs**

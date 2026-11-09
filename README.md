@@ -241,8 +241,6 @@ nvim --headless -u init.lua -l tests/smoke.lua
 ### UI & Appearance
 - **kanagawa.nvim** - Colorscheme
 - **lualine.nvim** - Statusline
-- **bufferline.nvim** - Buffer tabs
-- **indent-blankline.nvim** - Indentation guides
 
 ### Code Intelligence
 - **nvim-treesitter** - Syntax highlighting
@@ -260,8 +258,6 @@ nvim --headless -u init.lua -l tests/smoke.lua
 - **nvim-dap** - Debugger
 - **nvim-dap-ui** - Debug UI
 - **gitsigns.nvim** - Git integration
-- **nvim-preview** - Live preview
-- **sqls** - SQL utilities
 
 ---
 
@@ -358,9 +354,13 @@ return {
 ## Performance
 
 **Current metrics:**
-- Startup time: 45-50ms
-- Plugin count: 24
-- Total lines: ~1,850
+- Startup time: **47.6ms average** across five Windows headless runs
+- Plugin specifications: 37
+- Initially loaded plugins: 2 (`lazy.nvim`, Kanagawa)
+- Lua configuration: 1,932 lines
+
+The measured startup is fast enough for daily editing. The plugin specification
+count includes lazy-loaded dependencies; most are not loaded during startup.
 
 **Performance tips:**
 - Most plugins are lazy-loaded
