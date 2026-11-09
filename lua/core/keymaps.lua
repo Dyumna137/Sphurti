@@ -173,3 +173,4 @@ keymap('n', '<leader>eb', '<cmd>EmbeddedBuild<CR>', { noremap = true, silent = t
 keymap('n', '<leader>ef', '<cmd>EmbeddedFlash<CR>', { noremap = true, silent = true, desc = 'Embedded: Flash' })
 keymap('n', '<leader>em', '<cmd>EmbeddedMonitor<CR>', { noremap = true, silent = true, desc = 'Embedded: Serial monitor' })
 keymap('n', '<leader>ed', '<cmd>EmbeddedDebug<CR>', { noremap = true, silent = true, desc = 'Embedded: Check debug tools' })
+keymap('n', '<leader>et', '<cmd>EmbeddedToolReport<CR>', { noremap = true, silent = true, desc = 'Embedded: Show tool paths' })

@@ -1,5 +1,20 @@
 local M = {}
 
+local function extend_path()
+	local candidates = {
+		vim.fn.expand("$APPDATA") .. "/Python/Python313/Scripts",
+		vim.fn.expand("$USERPROFILE") .. "/.platformio/packages/toolchain-gccarmnoneeabi/bin",
+		vim.fn.expand("$LOCALAPPDATA") .. "/Microsoft/WinGet/Packages/xpack-dev-tools.openocd-xpack_Microsoft.Winget.Source_8wekyb3d8bbwe/xpack-openocd-0.12.0-7/bin",
+	}
+	local path = vim.env.PATH or ""
+	for _, directory in ipairs(candidates) do
+		if vim.fn.isdirectory(directory) == 1 and not path:find(vim.pesc(directory), 1, true) then
+			path = directory .. ";" .. path
+		end
+	end
+	vim.env.PATH = path
+end
+
 local function notify(message, level)
 	vim.notify("[embedded] " .. message, level or vim.log.levels.INFO)
 end
@@ -112,11 +127,24 @@ function M.debug()
 	notify("embedded debugging requires arm-none-eabi-gdb + OpenOCD, or PlatformIO/ESP-IDF", vim.log.levels.ERROR)
 end
 
+function M.report()
+	extend_path()
+	local tools = { "platformio", "pio", "arm-none-eabi-gdb", "openocd" }
+	local lines = { "Embedded tool availability:" }
+	for _, tool in ipairs(tools) do
+		local path = vim.fn.exepath(tool)
+		table.insert(lines, ("%s: %s"):format(tool, path ~= "" and path or "missing"))
+	end
+	notify(table.concat(lines, "\n"))
+end
+
 function M.setup()
+	extend_path()
 	vim.api.nvim_create_user_command("EmbeddedBuild", M.build, { desc = "Build the current embedded project" })
 	vim.api.nvim_create_user_command("EmbeddedFlash", M.flash, { desc = "Flash the current embedded project" })
 	vim.api.nvim_create_user_command("EmbeddedMonitor", M.monitor, { desc = "Open the embedded serial monitor" })
 	vim.api.nvim_create_user_command("EmbeddedDebug", M.debug, { desc = "Check embedded debugging support" })
+	vim.api.nvim_create_user_command("EmbeddedToolReport", M.report, { desc = "Report embedded tool paths" })
 end
 
 return M
