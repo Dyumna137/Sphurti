@@ -26,6 +26,7 @@ This folder contains all documentation files for the Sphurti Neovim configuratio
 - **[PROJECT_WORKFLOW.md](PROJECT_WORKFLOW.md)** - Editor, terminal, and firmware project workflow
 - **[EMBEDDED_WORKFLOW.md](EMBEDDED_WORKFLOW.md)** - Project-aware build, flash, monitor, and debug workflow
 - **[EMBEDDED_ENVIRONMENT.md](EMBEDDED_ENVIRONMENT.md)** - Project-local embedded tool environment
+- **[TECHNICAL_CHANGELOG.md](TECHNICAL_CHANGELOG.md)** - Technical decisions, reasoning, and validation history
 
 ---
 
