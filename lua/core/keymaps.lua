@@ -126,6 +126,7 @@ end
 require("core.embedded").setup()
 require("core.git").setup()
 require("core.diagnostics").setup()
+require("core.terminal").setup()
 keymap('n', '<leader>mm', ':make<CR>', { noremap = true, desc = 'Make: Build (async)' })
 keymap('n', '<leader>mc', ':make clean<CR>', { noremap = true, desc = 'Make: Clean' })
 keymap('n', '<leader>mr', ':make run<CR>', { noremap = true, desc = 'Make: Run' })

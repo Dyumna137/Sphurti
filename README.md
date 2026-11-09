@@ -54,7 +54,7 @@ The config started as a way to move away from VS Code's memory usage and has evo
 
 - **Debugger:** nvim-dap with UI for visual debugging
 - **Git Integration:** Inline git changes with gitsigns
-- **Terminal:** Floating terminal that opens in file directory or project root
+- **Terminal:** Built-in project/file terminal split with no extra plugin
 - **Live Preview:** HTML and Markdown preview support
 
 ### UI Components
@@ -205,7 +205,7 @@ nvim --headless -u init.lua -l tests/smoke.lua
 | Keymap | Action | Description |
 |--------|--------|-------------|
 | `<leader>tt` | Toggle terminal | Open in file directory |
-| `<leader>tw` | Toggle terminal | Open in project root |
+| `<leader>tc` | Toggle terminal | Open in project root |
 | `<Esc><Esc>` | Close terminal | Exit terminal mode |
 
 ### Editor

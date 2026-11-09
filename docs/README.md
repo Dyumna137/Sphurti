@@ -22,6 +22,7 @@ This folder contains all documentation files for the Sphurti Neovim configuratio
 ### Workflow
 - **[workflow_lesson.md](workflow_lesson.md)** - Git workflow lessons and best practices
 - **[USAGE.md](USAGE.md)** - Practical daily usage and troubleshooting guide
+- **[PROJECT_WORKFLOW.md](PROJECT_WORKFLOW.md)** - Editor, terminal, and firmware project workflow
 
 ---
 

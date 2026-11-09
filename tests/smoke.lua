@@ -6,6 +6,7 @@ local required_commands = {
 	"EmbeddedMonitor",
 	"EmbeddedDebug",
 	"DiagnosticsReport",
+	"ProjectTerminal",
 }
 
 for _, command in ipairs(required_commands) do
