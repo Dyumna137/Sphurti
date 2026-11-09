@@ -361,14 +361,10 @@ return {
 
 ## Performance
 
-**Current metrics:**
-- Startup time: **47.6ms average** across five Windows headless runs
-- Plugin specifications: 37
-- Initially loaded plugins: 2 (`lazy.nvim`, Kanagawa)
-- Lua configuration: 1,932 lines
-
-The measured startup is fast enough for daily editing. The plugin specification
-count includes lazy-loaded dependencies; most are not loaded during startup.
+The repository contains historical startup measurements, but this guide does
+not treat them as current performance guarantees. Plugin load time depends on
+the installed lockfile revisions, machine, terminal, cache state, and whether
+the first-start bootstrap is running. Measure your own setup before tuning it.
 
 **Performance tips:**
 - Most plugins are lazy-loaded
@@ -376,10 +372,10 @@ count includes lazy-loaded dependencies; most are not loaded during startup.
 - Use `nvim --startuptime startup.log +qa` to profile startup
 
 **If startup is slow:**
-```bash
-# Profile startup
+```powershell
+# Profile startup (PowerShell)
 nvim --startuptime startup.log +qa
-tail -20 startup.log
+Get-Content startup.log -Tail 20
 
 # Check what's taking time
 :Lazy profile
@@ -409,8 +405,8 @@ tail -20 startup.log
 ### Telescope Not Finding Files
 
 **Make sure ripgrep is installed:**
-```bash
-which rg
+```powershell
+Get-Command rg
 ```
 
 **In git repo, use:**
@@ -489,6 +485,6 @@ Resources used:
 
 ---
 
-**Status:** Stable and actively used  
-**Startup Time:** ~48ms  
-**Last Updated:** 2026-02-04
+**Configuration baseline:** Neovim 0.11.6 was inspected on 2026-11-09. See
+[the documentation audit](docs/DOCUMENTATION_AUDIT.md) for verification scope
+and known limitations.

@@ -99,7 +99,6 @@ belongs to the intended project root.
 | `<Space>ef` | Flash |
 | `<Space>em` | Serial monitor |
 | `<Space>ed` | Check debugger prerequisites |
-| `<Space>et` | Show tool paths |
 
 The commands detect PlatformIO, ESP-IDF, CMake, Make, and serial tools. They
 report missing tools instead of pretending that hardware actions succeeded.
@@ -109,13 +108,15 @@ report missing tools instead of pretending that hardware actions succeeded.
 | Key | Use |
 |---|---|
 | `<F5>` | Start or continue |
-| `<F9>` | Toggle breakpoint |
-| `<F10>` | Step over |
-| `<F11>` | Step into |
-| `<F12>` | Step out |
+| `<F1>` | Step into |
+| `<F2>` | Step over |
+| `<F3>` | Step out |
+| `<Space>b` | Toggle breakpoint |
+| `<Space>B` | Set a conditional breakpoint |
 | `<F7>` | Toggle debugger UI |
 
-Desktop C/C++ debugging requires Mason `cpptools`/`OpenDebugAD7`.
+Desktop C/C++ debugging is configured to use Mason's `cppdbg` adapter
+(`OpenDebugAD7`).
 STM32 debugging additionally requires ARM GDB, OpenOCD, and a connected
 ST-Link/J-Link. ESP32 debugging requires PlatformIO or ESP-IDF plus the board's
 USB/JTAG drivers.
@@ -130,7 +131,6 @@ Run these in Neovim:
 :Mason
 :LspInfo
 :DiagnosticsReport
-:EmbeddedToolReport
 ```
 
 Run these in PowerShell:
