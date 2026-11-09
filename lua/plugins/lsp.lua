@@ -85,7 +85,10 @@ return {
       -- These settings affect how diagnostics are rendered everywhere.
       -- Goal: low visual noise, high signal clarity.
       vim.diagnostic.config({
-        virtual_text = false,  -- Avoid inline clutter
+        virtual_text = {
+          spacing = 2,
+          prefix = "●",
+        },
         signs = true,          -- Use gutter icons instead
         underline = {
           severity = { min = vim.diagnostic.severity.WARN }
@@ -136,4 +139,3 @@ return {
     end,
   },
 }
-

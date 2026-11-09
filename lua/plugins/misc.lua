@@ -2,6 +2,25 @@
 -- this plugins not support Lua-based configuration cause as example tpope/vim-rhubarb is a pure Vimscript plugin).
 -- That’s why Lazy.nvim throws this error.
 return {
+  {
+    "folke/trouble.nvim",
+    cmd = "Trouble",
+    keys = {
+      { "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", desc = "Diagnostics: Workspace" },
+      { "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Diagnostics: Buffer" },
+      { "<leader>cs", "<cmd>Trouble symbols toggle<CR>", desc = "Symbols: Toggle" },
+    },
+    opts = {
+      modes = {
+        diagnostics = {
+          auto_open = false,
+          auto_close = true,
+          focus = false,
+          win = { position = "right" },
+        },
+      },
+    },
+  },
   -- REMOVED: nvim-ts-autotag (web dev only - not needed for C/C++/embedded work)
   -- {
   --   'windwp/nvim-ts-autotag',

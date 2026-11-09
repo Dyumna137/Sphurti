@@ -25,6 +25,7 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
 		{ "<leader>/", desc = "[/] Fuzzily search in current buffer" },
 		{ "<leader>s/", desc = "[S]earch [/] in Open Files" },
 		{ "<leader>sn", desc = "[S]earch [N]eovim files" },
+		{ "<leader>sl", desc = "[S]earch [L]ua config files" },
 	},
 	dependencies = {
 		"nvim-lua/plenary.nvim", -- Required dependency for many Neovim plugins
@@ -117,7 +118,8 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
 
 				-- Git files picker: disable preview for faster performance
 				git_files = {
-					previewer = false,
+					previewer = true,
+					prompt_title = "Git Files",
 				},
 			},
 
@@ -154,7 +156,18 @@ return { -- Fuzzy Finder plugin for Neovim using Telescope
 
 		-- Quickly find files in Neovim config directory
 		vim.keymap.set("n", "<leader>sn", function()
-			builtin.find_files({ cwd = vim.fn.stdpath("config") })
+			builtin.find_files({
+				cwd = vim.fn.stdpath("config"),
+				prompt_title = "Neovim Config Files",
+			})
 		end, { desc = "[S]earch [N]eovim files" })
+
+		vim.keymap.set("n", "<leader>sl", function()
+			builtin.find_files({
+				cwd = vim.fn.stdpath("config"),
+				search_dirs = { vim.fn.stdpath("config") .. "/lua" },
+				prompt_title = "Lua Configuration Files",
+			})
+		end, { desc = "[S]earch [L]ua config files" })
 	end,
 }

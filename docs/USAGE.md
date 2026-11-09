@@ -19,6 +19,7 @@ the expected project.
 | `<Space>sf` | Find files in the current project directory |
 | `<Space>gf` | Find tracked Git files in the current repository |
 | `<Space>sn` | Find files in this Neovim configuration |
+| `<Space>sl` | Find only files under the Neovim `lua/` directory |
 | `<Space>/` | Search inside the current file |
 | `<Space>sg` | Search text across the project |
 | `<Space>e` | Open the file explorer |
@@ -32,6 +33,9 @@ For this configuration, these files should be visible:
 
 Use `<Space>gf` when you want only tracked files. Use `<Space>sf` when you
 also need untracked files.
+
+The Git picker includes a preview window. Select a file in `<Space>gf` to
+inspect it before opening.
 
 ## Git workflow
 
@@ -56,7 +60,8 @@ actions.
 4. Run `:DiagnosticsReport` or press `<Space>ld`.
 5. Use `[d` and `]d` to move between diagnostics.
 6. Press `<Space>xx` for the full diagnostics list.
-7. Press `K` on a symbol for hover information.
+7. Press `<Space>xX` for the current-buffer diagnostics list.
+8. Press `K` on a symbol for hover information.
 
 If no LSP client attaches, check that `clangd` is installed and that the file
 belongs to the intended project root.

@@ -135,6 +135,7 @@ Leader key is `<Space>`.
 |--------|--------|-------------|
 | `<leader>sf` | Find files | Search project files |
 | `<leader>gf` | Git files | Search tracked Git files |
+| `<leader>sl` | Lua files | Search only Neovim Lua configuration |
 | `<leader>fg` | Live grep | Search text in files |
 | `<leader>fb` | Find buffers | List open buffers |
 | `<leader>e` | File explorer | Open built-in file browser |
@@ -168,6 +169,7 @@ Leader key is `<Space>`.
 | `<leader>xx` | Toggle diagnostics | Show all errors/warnings (Trouble) |
 | `<leader>xX` | Buffer diagnostics | Show errors in current file |
 | `<leader>sd` | Search diagnostics | Fuzzy find diagnostics |
+| `<leader>cs` | Symbols | Show document/workspace symbols |
 
 ### Build and Debug
 
