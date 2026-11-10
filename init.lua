@@ -24,6 +24,7 @@ end
 -- ═══════════════════════════════════════════════════════════════
 require("core.options")
 require("core.keymaps")
+require("core.panels")
 
 -- ═══════════════════════════════════════════════════════════════
 -- AUTOCOMMANDS: Automatic behaviors

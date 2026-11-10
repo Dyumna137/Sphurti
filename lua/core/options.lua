@@ -34,7 +34,7 @@ opt.numberwidth = 4       -- Width of the number column
 opt.signcolumn = 'yes:1'  -- Always show sign column (fixed width: prevents layout shift)
 opt.cursorline = true     -- Highlight current line (negligible perf impact in Neovim 0.9+)
 opt.showmode = false      -- Don't show --INSERT-- mode
-opt.showtabline = 0       -- Hidden: bufferline.nvim handles tab/buffer display
+opt.showtabline = 2       -- Keep tabline visible for keyboard-driven tab navigation
 opt.pumheight = 10        -- Max number of items in completion popup
 opt.conceallevel = 0      -- Show `` in markdown
 

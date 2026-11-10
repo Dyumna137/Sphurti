@@ -1,4 +1,5 @@
 local M = {}
+local panels = require("core.panels")
 
 local function notify(message, level)
 	vim.notify("[embedded] " .. message, level or vim.log.levels.INFO)
@@ -10,12 +11,18 @@ local function root()
 	return found and vim.fs.dirname(found) or vim.fn.getcwd()
 end
 
+local function current_source()
+	local file = vim.api.nvim_buf_get_name(0)
+	if file:match("%.c$") or file:match("%.cc$") or file:match("%.cpp$") or file:match("%.cxx$") then
+		return file
+	end
+end
+
 local function has(path, name)
 	return vim.fn.executable(path or name) == 1
 end
 
-local function run(command, opts)
-	opts = opts or {}
+local function run(command, kind)
 	local cwd = root()
 	local command_name = type(command) == "table" and command[1] or command
 	if not has(nil, command_name) then
@@ -24,17 +31,7 @@ local function run(command, opts)
 	end
 
 	notify(("running %s in %s"):format(table.concat(command, " "), cwd))
-	vim.fn.jobstart(command, {
-		cwd = cwd,
-		term = opts.term,
-		on_exit = function(_, code)
-			if code == 0 then
-				notify(("completed: %s"):format(command_name))
-			else
-				notify(("%s exited with code %d"):format(command_name, code), vim.log.levels.ERROR)
-			end
-		end,
-	})
+	panels.external(kind or "build", command)
 end
 
 local function terminal(command)
@@ -55,34 +52,66 @@ end
 function M.build()
 	local cwd = root()
 	if vim.fn.filereadable(cwd .. "/platformio.ini") == 1 and has(nil, "platformio") then
-		return run({ "platformio", "run" }, { term = true })
+		return run({ "platformio", "run" }, "build")
 	end
 	if vim.fn.filereadable(cwd .. "/sdkconfig") == 1 and has(nil, "idf.py") then
-		return run({ "idf.py", "build" }, { term = true })
+		return run({ "idf.py", "build" }, "build")
 	end
 	if vim.fn.isdirectory(cwd .. "/build") == 1 and has(nil, "cmake") then
-		return run({ "cmake", "--build", "build" }, { term = true })
+		return run({ "cmake", "--build", "build" }, "build")
 	end
 	if vim.fn.filereadable(cwd .. "/Makefile") == 1 and has(nil, "make") then
-		return run({ "make" }, { term = true })
+		return run({ "make" }, "build")
 	end
-	notify("no supported build project or tool found (PlatformIO, ESP-IDF, CMake, or Make)", vim.log.levels.ERROR)
+	local source = current_source()
+	local compiler = has(nil, "g++") and "g++" or (has(nil, "clang++") and "clang++" or nil)
+	if source and compiler then
+		local output = vim.fs.joinpath(cwd, vim.fn.fnamemodify(source, ":t:r") .. (vim.fn.has("win32") == 1 and ".exe" or ""))
+		return run({ compiler, "-std=c++17", "-Wall", "-Wextra", source, "-o", output }, "build")
+	end
+	notify("no supported build project found; use a Makefile/CMake project or open a C/C++ source file with g++/clang++ available", vim.log.levels.ERROR)
 end
 
 function M.flash()
 	local cwd = root()
 	if vim.fn.filereadable(cwd .. "/platformio.ini") == 1 and has(nil, "platformio") then
-		return run({ "platformio", "run", "--target", "upload" }, { term = true })
+		return run({ "platformio", "run", "--target", "upload" }, "run")
 	end
+
 	if vim.fn.filereadable(cwd .. "/sdkconfig") == 1 and has(nil, "idf.py") then
-		return run({ "idf.py", "flash" }, { term = true })
+		return run({ "idf.py", "flash" }, "run")
 	end
 	for _, script in ipairs({ "flash.cmd", "flash.ps1", "flash.bat" }) do
 		if vim.fn.filereadable(cwd .. "/" .. script) == 1 then
-			return run(vim.fn.has("win32") == 1 and { "cmd", "/c", script } or { "sh", script }, { term = true })
+			return run(vim.fn.has("win32") == 1 and { "cmd", "/c", script } or { "sh", script }, "run")
 		end
 	end
 	notify("no flash command found; add a project flash script or install PlatformIO/ESP-IDF", vim.log.levels.ERROR)
+end
+
+function M.run()
+	local source = current_source()
+	local default = source and vim.fs.joinpath(root(), vim.fn.fnamemodify(source, ":t:r") .. (vim.fn.has("win32") == 1 and ".exe" or "")) or root() .. "/build/"
+	local executable = vim.fn.input("Executable: ", default, "file")
+	if executable == "" then
+		return
+	end
+	if vim.fn.filereadable(executable) == 0 then
+		notify("executable does not exist: " .. executable, vim.log.levels.ERROR)
+		return
+	end
+	panels.external("run", { executable })
+end
+
+function M.test()
+	local cwd = root()
+	if vim.fn.isdirectory(cwd .. "/build") == 1 and has(nil, "ctest") then
+		return run({ "ctest", "--test-dir", "build", "--output-on-failure" }, "tests")
+	end
+	if vim.fn.filereadable(cwd .. "/Makefile") == 1 and has(nil, "make") then
+		return run({ "make", "test" }, "tests")
+	end
+	notify("no CTest build directory or Makefile test target found", vim.log.levels.ERROR)
 end
 
 function M.monitor()
@@ -113,8 +142,11 @@ function M.debug()
 end
 
 function M.setup()
+	panels.setup()
 	vim.api.nvim_create_user_command("EmbeddedBuild", M.build, { desc = "Build the current embedded project" })
 	vim.api.nvim_create_user_command("EmbeddedFlash", M.flash, { desc = "Flash the current embedded project" })
+	vim.api.nvim_create_user_command("EmbeddedRun", M.run, { desc = "Run a built project executable" })
+	vim.api.nvim_create_user_command("EmbeddedTest", M.test, { desc = "Run project tests" })
 	vim.api.nvim_create_user_command("EmbeddedMonitor", M.monitor, { desc = "Open the embedded serial monitor" })
 	vim.api.nvim_create_user_command("EmbeddedDebug", M.debug, { desc = "Check embedded debugging support" })
 end

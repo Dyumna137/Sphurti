@@ -55,26 +55,42 @@ return {
       desc = 'Debug: Step Out',
     },
     {
-      '<leader>b',
+      '<leader>db',
       function()
         require('dap').toggle_breakpoint()
       end,
       desc = 'Debug: Toggle Breakpoint',
     },
     {
-      '<leader>B',
+      '<leader>dB',
       function()
         require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end,
       desc = 'Debug: Set Breakpoint',
     },
-    -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
     {
-      '<F7>',
+      '<leader>d',
+      function()
+        require('dap').continue()
+      end,
+      desc = 'Debug: Start/Continue',
+    },
+    {
+      '<leader>dw',
       function()
         require('dapui').toggle()
       end,
-      desc = 'Debug: See last session result.',
+      desc = 'Debug: Toggle inspector',
+    },
+    {
+      '<leader>dt',
+      function()
+        local expression = vim.fn.input('Watch expression: ')
+        if expression ~= '' then
+          require('dapui').elements.watches.add(expression)
+        end
+      end,
+      desc = 'Debug: Watch expressions',
     },
   },
   config = function()
@@ -101,6 +117,19 @@ return {
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
     dapui.setup {
+      layouts = {
+        {
+          elements = {
+            { id = 'scopes', size = 0.3 },
+            { id = 'stacks', size = 0.2 },
+            { id = 'watches', size = 0.2 },
+            { id = 'breakpoints', size = 0.15 },
+            { id = 'repl', size = 0.15 },
+          },
+          size = 48,
+          position = 'right',
+        },
+      },
       -- Set icons to characters that are more likely to work in every terminal.
       --    Feel free to remove or use ones that you like more! :)
       --    Don't feel like these are good choices.
@@ -132,7 +161,9 @@ return {
     --   vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
     -- end
 
-    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
+    dap.listeners.after.event_initialized['dapui_config'] = function()
+      dapui.open()
+    end
     dap.listeners.before.event_terminated['dapui_config'] = dapui.close
     dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
